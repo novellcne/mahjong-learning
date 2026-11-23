@@ -1,0 +1,3891 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>From Symbols to Social Play — Prototype V0.6.9</title>
+  <style>
+    :root{
+      --gt-navy:#003057;
+      --gt-navy-deep:#001f3d;
+      --gt-gold:#B3A369;
+      --gt-gold-dark:#857437;
+      --gt-light:#D6DBD4;
+      --paper:#ffffff;
+      --canvas:#f4f5f6;
+      --ink:#102033;
+      --muted:#667085;
+      --line:#d6dbe2;
+      --soft:#eef1f4;
+      --good:#e9f5ee;
+      --good-line:#9bc7ad;
+      --bad:#fff0f0;
+      --bad-line:#e7b7b7;
+      --shadow:0 12px 30px rgba(0,48,87,.08);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--ink);
+      font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,"Microsoft YaHei",sans-serif;
+      background:
+        linear-gradient(rgba(244,245,246,.96),rgba(244,245,246,.96)),
+        radial-gradient(circle at 15% 10%, rgba(179,163,105,.11) 0 90px, transparent 91px),
+        radial-gradient(circle at 88% 15%, rgba(0,48,87,.06) 0 125px, transparent 126px),
+        var(--canvas);
+    }
+    button{font:inherit}
+    .app{max-width:1180px;margin:0 auto;padding:26px 24px 48px}
+
+    .hero{
+      position:relative;
+      overflow:hidden;
+      background:var(--paper);
+      border-top:6px solid var(--gt-gold);
+      border-bottom:1px solid var(--line);
+      box-shadow:var(--shadow);
+      padding:28px 30px 24px;
+      margin-bottom:18px;
+    }
+    .hero::after{
+      content:"🀇   🀐   🀙   🀀";
+      position:absolute;
+      right:24px;
+      top:12px;
+      color:rgba(0,48,87,.055);
+      font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+      font-size:72px;
+      letter-spacing:10px;
+      pointer-events:none;
+      white-space:nowrap;
+    }
+    .hero-top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;position:relative;z-index:1}
+    h1{margin:0;color:var(--gt-navy);font-size:34px;line-height:1.12;letter-spacing:-.02em}
+    .subtitle{margin:7px 0 0;color:#465466;font-size:17px}
+    .cn-subtitle{margin-top:4px;color:var(--gt-gold-dark);font-size:14px;font-weight:700}
+    .version{white-space:nowrap;border:1px solid var(--gt-gold);color:var(--gt-navy);background:#fffdf7;padding:7px 10px;font-weight:800;font-size:12px;letter-spacing:.03em}
+    .intro-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:24px;margin-top:22px;position:relative;z-index:1}
+    .intro-copy{border-left:4px solid var(--gt-gold);padding-left:15px}
+    .intro-copy strong{color:var(--gt-navy)}
+    .intro-copy p{margin:3px 0;color:#445164}
+    .four-call-note{border:1px solid var(--line);background:#fafbfc;padding:14px 16px}
+    .four-call-note .eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gt-navy);font-weight:900}
+    .four-call-note .flow{margin-top:6px;font-weight:800;color:var(--gt-navy)}
+    .four-call-note .zh{margin-top:3px;color:var(--gt-gold-dark);font-size:13px;font-weight:700}
+
+    .call-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px}
+    .call-card{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-top:2px solid var(--gt-navy);
+      padding:9px 10px;
+      display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;
+      min-height:68px;
+    }
+    .call-id{min-width:48px}
+    .call-card .word{font-size:22px;font-weight:950;color:var(--gt-navy);line-height:1}
+    .call-card .pinyin{font-size:12px;font-weight:900;color:var(--gt-gold-dark);margin-top:3px}
+    .call-card .meaning{font-size:11px;color:#566173;margin:0;line-height:1.25}
+    .call-card .meaning strong{display:block;color:var(--gt-navy);font-size:12px;margin-bottom:2px}
+    .listen{border:1px solid var(--gt-navy);background:#fff;color:var(--gt-navy);padding:7px 10px;cursor:pointer;font-weight:850;width:100%}
+    .listen:hover{background:var(--gt-navy);color:#fff}
+    .call-mini-listen{width:auto;min-width:42px;padding:6px 8px;font-size:0}
+    .call-mini-listen::before{content:"🔊";font-size:15px}
+
+    .speak-practice{
+      border:1px solid var(--line);border-left:4px solid var(--gt-gold);background:#fbfbfa;
+      padding:14px 16px;margin:0 0 18px;display:grid;grid-template-columns:.7fr 1.3fr;gap:18px;align-items:start;
+    }
+    .speak-practice h3{margin:0;color:var(--gt-navy);font-size:18px}
+    .speak-target{margin-top:5px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+    .speak-target .word{font-size:32px;font-weight:950;color:var(--gt-navy)}
+    .speak-target .pin{font-weight:900;color:var(--gt-gold-dark)}
+    .speak-target .en{font-size:13px;color:#5d6877}
+    .record-controls{display:flex;gap:7px;flex-wrap:wrap}
+    .record-btn{border:1px solid var(--gt-navy);background:#fff;color:var(--gt-navy);padding:7px 10px;font-weight:850;cursor:pointer}
+    .record-btn.primary{background:var(--gt-navy);color:#fff}
+    .record-btn:disabled{opacity:.45;cursor:not-allowed}
+    .record-status{font-size:12px;color:#667085;margin-top:8px;min-height:36px}
+    .privacy-note{font-size:11px;color:#7b8491;margin-top:4px}
+    .action-cue{border-top:1px solid var(--line);margin-top:12px;padding-top:10px;font-size:12px;color:#48566a}
+    .action-cue div+div{margin-top:5px}
+    .action-cue strong{color:var(--gt-navy)}
+
+    .module-nav{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:var(--paper);margin-bottom:18px}
+    .step{border:0;border-right:1px solid var(--line);background:#fff;padding:13px 14px;text-align:left;cursor:pointer;min-height:82px}
+    .step:last-child{border-right:0}
+    .step.active{background:var(--gt-navy);color:#fff}
+    .step .k{font-size:11px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#68758a}
+    .step.active .k{color:#dbe8f4}
+    .step .t{font-weight:900;font-size:16px;margin-top:4px}
+    .step .s{font-size:12px;color:#7b8491;margin-top:2px}
+    .step.active .s{color:#f1e7c4}
+
+    .panel{display:none;background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);padding:26px 28px}
+    .panel.active{display:block}
+    .section-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:18px}
+    .section-head h2{margin:0;color:var(--gt-navy);font-size:27px;line-height:1.15}
+    .section-head .zh-title{font-size:15px;color:var(--gt-gold-dark);font-weight:850;margin-top:4px}
+    .section-head .lead{margin:5px 0 0;color:#566173;max-width:760px}
+    .goal-tag{border-left:3px solid var(--gt-gold);padding-left:10px;max-width:280px;font-size:12px;color:#5d6877}
+    .goal-tag strong{display:block;color:var(--gt-navy);font-size:12px}
+
+    .family-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 20px}
+    .family{border:1px solid var(--line);padding:14px;background:#fff;text-align:center}
+    .family .glyph{font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;font-size:54px;line-height:1.1}
+    .family .en{font-weight:900;color:var(--gt-navy);margin-top:7px}
+    .family .cn{font-size:13px;color:var(--gt-gold-dark);font-weight:800}
+
+    .decode-path{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 18px}
+    .decode-stage{border:1px solid var(--line);background:#fff;padding:12px 13px;position:relative}
+    .decode-stage::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--gt-gold-dark);font-weight:950}
+    .decode-stage:last-child::after{display:none}
+    .decode-stage .n{font-size:11px;color:#718096;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+    .decode-stage .name{font-weight:950;color:var(--gt-navy);margin-top:3px}
+    .decode-stage .why{font-size:12px;color:#697586;margin-top:3px}
+    .decode-tabs{display:flex;gap:0;border-bottom:2px solid var(--gt-navy);margin:12px 0 18px;flex-wrap:wrap}
+    .decode-tab{border:1px solid var(--line);border-bottom:0;background:#f7f8fa;color:var(--gt-navy);padding:9px 14px;cursor:pointer;font-weight:900;margin-right:4px}
+    .decode-tab.active{background:var(--gt-navy);color:#fff;border-color:var(--gt-navy)}
+    .decode-lesson{display:none}.decode-lesson.active{display:block}
+    .strategy-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:18px;align-items:start}
+    .strategy-card{border:1px solid var(--line);border-top:5px solid var(--gt-gold);padding:17px;background:#fff}
+    .strategy-card h3{margin:0 0 6px;color:var(--gt-navy);font-size:21px}
+    .strategy-card .big-rule{font-weight:950;color:var(--gt-navy);font-size:18px;margin:8px 0 3px}
+    .strategy-card .cn-rule{font-size:13px;color:#725d35;font-weight:700}
+    .example-strip{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px}
+    .example-tile{min-width:96px;text-align:center}
+    .example-tile .tile{margin:auto}
+    .example-tile .label{font-size:12px;color:#566173;font-weight:800;margin-top:5px}
+    .numeral-key{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin-top:12px}
+    .numeral-key div{border:1px solid var(--line);background:#fafbfc;text-align:center;padding:7px 3px;font-size:12px}
+    .numeral-key strong{display:block;color:var(--gt-navy);font-size:17px}
+    .honor-map{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .honor-item{border:1px solid var(--line);background:#fafbfc;padding:9px;text-align:center;font-size:12px}
+    .honor-item .symbol{font-size:26px;font-weight:950;color:var(--gt-navy)}
+    .mini-check{border-left:4px solid var(--gt-navy);background:#f7f9fb;padding:13px 14px;margin-top:15px}
+    .mini-check h4{margin:0 0 10px;color:var(--gt-navy);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .mini-check .answers{margin-top:8px}
+    /* V0.4.2 accessibility/readability fix: Quick Check tiles use the same visual scale as practice tiles. */
+    .quick-glyph{
+      width:58px;height:74px;border:2px solid #c9d0d9;background:linear-gradient(#fff,#f6f1e7);
+      display:inline-flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 6px rgba(16,32,51,.08);font-size:44px;line-height:1;
+      font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    }
+    .mini-answer.tile-choice{
+      min-height:84px;display:flex;align-items:center;justify-content:center;padding:8px;
+    }
+    .mini-tile-glyph{
+      width:54px;height:70px;border:2px solid #c9d0d9;background:linear-gradient(#fff,#f6f1e7);
+      display:inline-flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 5px rgba(16,32,51,.07);font-size:42px;line-height:1;
+      font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    }
+    .mixed-practice{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+    .mixed-practice h3{color:var(--gt-navy);margin:0 0 4px}
+    .task-index{font-size:12px;color:#718096;font-weight:800}
+    .solution-note{font-size:12px;color:#677487;margin-top:8px}
+    .next-example{display:none}
+    .next-example.show{display:inline-block}
+
+    .card{border:1px solid var(--line);padding:18px;background:#fff;margin:16px 0}
+    .card h3{margin:0 0 8px;color:var(--gt-navy);font-size:19px}
+    .mini{font-size:12px;color:#758093}
+    .question-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+
+    .tile-wrap{display:inline-flex;flex-direction:column;align-items:center;gap:5px;vertical-align:top}
+    .tile{
+      width:76px;height:98px;border:2px solid #c9d0d9;background:linear-gradient(#fff,#f6f1e7);
+      display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(16,32,51,.08);user-select:none;
+    }
+    .tile .glyph{font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;font-size:54px;line-height:1}
+    .tile-caption{text-align:center;font-size:12px;line-height:1.2;min-height:28px}
+    .tile-caption .en{display:block;color:#556174;font-weight:800}
+    .tile-caption .cn{display:block;color:var(--gt-gold-dark);font-weight:800}
+    .no-caption .tile-caption{visibility:hidden}
+
+    .answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+    .choice,.primary,.secondary{border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 12px;cursor:pointer;font-weight:800}
+    .choice:hover,.secondary:hover{border-color:var(--gt-navy);background:#f8fafc}
+    .mini-answer.wrong-choice{border-color:#c94b4b;background:#fff1f1;color:#8d2525}
+    .mini-answer.correct-choice{border-color:#2f7d59;background:#eef8f2;color:#215f44}
+    .primary{background:var(--gt-navy);border-color:var(--gt-navy);color:#fff}
+    .primary:hover{background:var(--gt-navy-deep)}
+    .subchoice{display:block;color:#727c8c;font-size:12px;font-weight:650;margin-top:2px}
+    .feedback{display:none;margin-top:14px;padding:12px 14px;border-left:4px solid transparent;font-weight:700}
+    .feedback.good{display:block;background:var(--good);border-color:var(--good-line)}
+    .feedback.bad{display:block;background:var(--bad);border-color:var(--bad-line)}
+    .feedback .zhfb{display:block;margin-top:4px;color:#6b5a36;font-size:13px;font-weight:650}
+
+    .lesson-tabs{display:flex;gap:0;border-bottom:2px solid var(--gt-navy);margin:4px 0 18px;flex-wrap:wrap}
+    .lesson-tab{border:1px solid var(--line);border-bottom:0;background:#f7f8fa;color:var(--gt-navy);padding:9px 14px;cursor:pointer;font-weight:900;margin-right:4px}
+    .lesson-tab.active{background:var(--gt-navy);color:#fff;border-color:var(--gt-navy)}
+    .micro-lesson{display:none}.micro-lesson.active{display:block}
+    .association-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:18px;align-items:start}
+    .term-box{border:1px solid var(--line);border-top:5px solid var(--gt-gold);padding:18px;background:#fff}
+    .term-box .term-en{font-size:23px;font-weight:950;color:var(--gt-navy)}
+    .term-box .term-cn{font-size:34px;font-weight:950;color:var(--gt-navy);margin-top:6px}
+    .term-box .term-pin{font-size:17px;font-weight:900;color:var(--gt-gold-dark)}
+    .term-box .rule{margin:10px 0;color:#4f5a69}
+    .term-box .zh-rule{font-size:13px;color:#725d35;margin-top:-4px}
+    .term-box .listen{margin-top:10px;width:auto}
+
+    .formation-box{border:1px solid var(--line);background:#fbfcfd;padding:16px}
+    .formation-row{display:grid;grid-template-columns:1fr auto .55fr auto 1fr;gap:10px;align-items:center;text-align:center}
+    .formation-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:900;color:#7a8492;margin-bottom:7px}
+    .mini-hand{display:flex;justify-content:center;gap:7px;flex-wrap:wrap}
+    .mini-hand .tile{width:58px;height:76px}.mini-hand .glyph{font-size:42px}
+    .plus,.arrow{font-size:25px;font-weight:900;color:var(--gt-gold-dark)}
+    .formation-note{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:#5a6575}
+    .formation-note strong{color:var(--gt-navy)}
+
+    .drag-lab{margin-top:16px;border:1px solid var(--line);background:#fff;padding:15px}
+    .drag-lab h4{margin:0 0 4px;color:var(--gt-navy)}
+    .drag-source{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+    .draggable{cursor:grab}.draggable:active{cursor:grabbing}
+    .dropzone{min-height:105px;border:2px dashed #9eacbb;background:#fafbfc;padding:10px;display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+    .dropzone.over{border-color:var(--gt-gold-dark);background:#fffdf7}
+    .drop-hint{color:#778294;font-size:13px}
+    .try-box{margin-top:16px;border-left:4px solid var(--gt-navy);background:#f7f9fb;padding:14px}
+    .try-box h4{margin:0 0 8px;color:var(--gt-navy)}
+    .try-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .try-option{border:1px solid var(--line);background:#fff;padding:12px;cursor:pointer;text-align:left;font-weight:800}
+    .try-option:hover{border-color:var(--gt-navy)}
+    .try-option.wrong-choice{border-color:#c94b4b;background:#fff1f1;color:#8d2525}
+    .try-option.correct-choice{border-color:#2f7d59;background:#eef8f2;color:#215f44}
+    /* V0.5: larger, beginner-readable pattern tiles inside Module 2 Try-it items. */
+    .try-option.pattern-tiles{
+      display:flex;align-items:center;gap:14px;min-height:100px;padding:10px 14px;
+    }
+    .try-tiles{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:0 0 auto}
+    .try-tile{
+      width:50px;height:66px;border:2px solid #c9d0d9;background:linear-gradient(#fff,#f6f1e7);
+      display:inline-flex;align-items:center;justify-content:center;
+      box-shadow:0 2px 5px rgba(16,32,51,.07);font-size:39px;line-height:1;
+      font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    }
+    .try-label{font-weight:850;line-height:1.25}
+
+    .scenario{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}
+    .callout{border-left:4px solid var(--gt-gold);background:#fffdf8;padding:12px 14px;color:#4e5867}
+    .callout strong{color:var(--gt-navy)}
+    .spoken-call{display:none;margin-top:14px;background:#f8fafc;border:1px solid var(--line);padding:12px}
+    .spoken-call.show{display:block}
+    .spoken-call strong{font-size:25px;color:var(--gt-navy)}
+
+    .challenge-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .audio-challenge{border:1px solid var(--line);padding:16px;background:#fff}
+    .challenge-prompt{font-weight:900;color:var(--gt-navy);margin-bottom:10px}
+    .big-audio{border:2px solid var(--gt-navy);background:#fff;color:var(--gt-navy);padding:14px 18px;font-weight:950;cursor:pointer;width:100%;font-size:17px}
+    .big-audio:hover{background:var(--gt-navy);color:#fff}
+    .result-box{display:none;margin-top:14px;padding:14px;background:#eef4f8;border-left:4px solid var(--gt-navy)}
+    .result-box.show{display:block}
+
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .done{display:none;margin-top:16px;padding:14px;background:var(--good);border-left:4px solid var(--good-line)}
+    footer{margin-top:20px;border-top:1px solid var(--line);padding-top:14px;color:#687487;font-size:12px}
+
+    @media(max-width:900px){
+      .intro-grid,.association-grid,.scenario,.challenge-grid{grid-template-columns:1fr}
+      .family-grid,.call-strip,.module-nav,.decode-path{grid-template-columns:repeat(2,1fr)}
+      .strategy-grid{grid-template-columns:1fr}
+      .decode-stage:nth-child(2)::after{display:none}
+      .step:nth-child(2){border-right:0}.step{border-bottom:1px solid var(--line)}
+      .formation-row{grid-template-columns:1fr;gap:7px}.plus,.arrow{transform:rotate(90deg)}
+    }
+    @media(max-width:580px){
+      .app{padding:14px 10px 30px}.hero{padding:22px 18px}.hero-top{display:block}.version{display:inline-block;margin-top:12px}
+      .family-grid,.call-strip,.module-nav,.answers,.try-grid,.decode-path{grid-template-columns:1fr}
+      .decode-stage::after{display:none}
+      .numeral-key{grid-template-columns:repeat(3,1fr)}
+      .honor-map{grid-template-columns:repeat(2,1fr)}
+      .hero::after{display:none}.panel{padding:20px 16px}
+      .speak-practice{grid-template-columns:1fr}
+    }
+  
+  /* Final learning experience styles */
+  .onb-app{
+    max-width:1180px;
+    margin:0 auto;
+    padding:22px 24px 48px;
+    color:var(--ink);
+  }
+  .onb-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    margin-bottom:16px;
+    color:var(--gt-navy);
+  }
+  .onb-brand{font-weight:900}
+  .onb-version{
+    border:1px solid var(--gt-gold);
+    background:#fffdf8;
+    padding:7px 10px;
+    font-size:12px;
+    font-weight:850;
+    white-space:nowrap;
+  }
+  .onb-screen{
+    min-height:calc(100vh - 95px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .onb-panel{
+    width:100%;
+    background:#fff;
+    border-top:6px solid var(--gt-gold);
+    box-shadow:0 18px 42px rgba(0,48,87,.10);
+  }
+  .onb-hero{
+    padding:34px 38px 32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .onb-hero::after{
+    content:"🀙  🀝  🀡";
+    position:absolute;
+    right:32px;
+    top:10px;
+    color:rgba(0,48,87,.045);
+    font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    font-size:92px;
+    letter-spacing:10px;
+    pointer-events:none;
+  }
+  .onb-eyebrow{
+    color:var(--gt-gold-dark);
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+  }
+  .onb-title{
+    margin:8px 0;
+    color:var(--gt-navy);
+    font-size:38px;
+    line-height:1.12;
+    letter-spacing:-.025em;
+  }
+  .onb-lead{
+    margin:0;
+    color:#4f5c6c;
+    font-size:18px;
+  }
+  .onb-lead strong{color:var(--gt-navy)}
+  .onb-challenge{
+    margin-top:26px;
+    border:1px solid var(--line);
+    background:#fbfcfd;
+    padding:22px;
+  }
+  .onb-challenge-title{
+    font-weight:900;
+    color:var(--gt-navy);
+    font-size:19px;
+  }
+  .onb-note{color:var(--muted);font-size:13px}
+  .onb-tile-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin-top:20px;
+  }
+  .onb-tile-choice{
+    border:2px solid var(--line);
+    background:#fff;
+    min-height:170px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease,background .16s ease;
+  }
+  .onb-tile-choice:hover{
+    transform:translateY(-2px);
+    border-color:var(--gt-navy);
+    box-shadow:0 8px 18px rgba(0,48,87,.08);
+  }
+  .onb-glyph{
+    font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    font-size:78px;
+    line-height:1;
+  }
+  .onb-option{
+    margin-top:11px;
+    color:#7a8492;
+    font-size:12px;
+  }
+  .onb-tile-choice.onb-correct{
+    border-color:#2f7d59;
+    background:#eef8f2;
+  }
+  .onb-tile-choice.onb-wrong{
+    border-color:#c94b4b;
+    background:#fff4f4;
+  }
+  .onb-feedback{
+    display:none;
+    margin-top:18px;
+    padding:16px 18px;
+    border-left:4px solid transparent;
+  }
+  .onb-feedback.onb-show{display:block}
+  .onb-feedback.onb-good{background:var(--good);border-color:var(--good-line)}
+  .onb-feedback.onb-bad{background:var(--bad);border-color:var(--bad-line)}
+  .onb-feedback .onb-big{
+    font-size:19px;
+    font-weight:900;
+    color:var(--gt-navy);
+    margin-bottom:4px;
+  }
+  .onb-feedback .onb-cn{
+    font-size:13px;
+    color:#6b5a36;
+    margin-top:4px;
+  }
+  .onb-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:16px;
+  }
+  .onb-primary,.onb-secondary{
+    border:1px solid var(--gt-navy);
+    padding:10px 14px;
+    cursor:pointer;
+    font-weight:850;
+  }
+  .onb-primary{background:var(--gt-navy);color:#fff}
+  .onb-primary:hover{background:var(--gt-navy-deep)}
+  .onb-secondary{background:#fff;color:var(--gt-navy)}
+  .onb-secondary:hover{background:#f8fafc}
+
+  .onb-orientation{
+    display:none;
+    padding:32px 36px;
+  }
+  .onb-orientation.onb-show{
+    display:block;
+    animation:onbFadeUp .3s ease both;
+  }
+  .onb-orientation-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+  }
+  .onb-orientation-copy{min-width:0}
+  .onb-orientation h2{
+    margin:0;
+    color:var(--gt-navy);
+    font-size:30px;
+  }
+  .onb-sub{margin-top:5px;color:var(--muted)}
+  .onb-ghosts{
+    display:flex;
+    gap:14px;
+    opacity:.14;
+    padding-top:0;
+    flex:0 0 auto;
+  }
+  .onb-ghost{
+    font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols 2","Symbola",sans-serif;
+    font-size:62px;
+    line-height:1;
+  }
+  .onb-benefits{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin:20px 0 16px;
+  }
+  .onb-benefit{
+    border:1px solid var(--line);
+    background:#fff;
+    padding:15px 14px;
+    min-height:86px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    box-shadow:0 7px 18px rgba(0,48,87,.04);
+  }
+  .onb-benefit-icon{
+    flex:0 0 38px;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#eef4f8;
+    color:var(--gt-navy);
+    font-size:20px;
+    font-weight:900;
+  }
+  .onb-benefit-title{
+    color:var(--gt-navy);
+    font-size:18px;
+    font-weight:950;
+    line-height:1.2;
+  }
+  .onb-trust{
+    margin:0 0 22px;
+    padding:10px 13px;
+    border:1px solid #dfe6ec;
+    background:#f8fafc;
+    color:#526171;
+    font-size:12.5px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .onb-trust-icon{
+    flex:0 0 24px;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:#eef4f8;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--gt-navy);
+    font-size:13px;
+  }
+  .onb-trust strong{color:var(--gt-navy)}
+  .onb-trust-cn{color:#7a6b45;margin-left:4px}
+  .onb-path-intro{
+    color:#4f5c6c;
+    margin:2px 0 10px;
+  }
+  .onb-path{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+  .onb-path-step{
+    border:1px solid var(--line);
+    background:#fff;
+    padding:16px 14px;
+    position:relative;
+    min-height:138px;
+  }
+  .onb-path-step::after{
+    content:"→";
+    position:absolute;
+    right:-9px;
+    top:50%;
+    transform:translateY(-50%);
+    color:var(--gt-gold-dark);
+    font-weight:950;
+  }
+  .onb-path-step:last-child::after{display:none}
+  .onb-step-no{
+    font-size:10px;
+    color:#8a94a2;
+    font-weight:900;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+  }
+  .onb-step-title{
+    font-size:21px;
+    line-height:1.18;
+    font-weight:950;
+    color:var(--gt-navy);
+    margin-top:6px;
+  }
+  .onb-step-desc{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:7px;
+    line-height:1.42;
+  }
+  .onb-bottom{
+    margin-top:20px;
+    border-left:4px solid var(--gt-gold);
+    background:#fffdf8;
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+  }
+  .onb-bottom strong{color:var(--gt-navy)}
+  .onb-bottom-cn{
+    font-size:13px;
+    color:#6b5a36;
+    margin-top:2px;
+  }
+  @keyframes onbFadeUp{
+    from{opacity:0;transform:translateY(8px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+  @media(max-width:850px){
+    .onb-tile-grid,.onb-benefits,.onb-path{grid-template-columns:1fr 1fr}
+    .onb-path-step:nth-child(2)::after{display:none}
+    .onb-orientation-head{flex-direction:column}
+    .onb-bottom{display:block}
+    .onb-bottom .onb-primary{margin-top:12px}
+  }
+  @media(max-width:560px){
+    .onb-app{padding:14px 10px 32px}
+    .onb-hero,.onb-orientation{padding:24px 18px}
+    .onb-title{font-size:30px}
+    .onb-tile-grid,.onb-benefits,.onb-path{grid-template-columns:1fr}
+    .onb-path-step::after,.onb-hero::after{display:none}
+  }
+
+  
+  /* Final learning experience styles */
+  .prog-wrap{
+    background:#fff;
+    border:1px solid var(--line);
+    padding:12px 14px;
+    margin:0 0 14px;
+  }
+  .prog-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    margin-bottom:9px;
+  }
+  .prog-title{
+    color:var(--gt-navy);
+    font-size:12px;
+    font-weight:950;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .prog-help{
+    color:#7a8492;
+    font-size:12px;
+  }
+  .prog-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .prog-item{
+    border:1px solid var(--line);
+    background:#fff;
+    min-height:46px;
+    padding:8px 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#6c7685;
+    font-size:13px;
+    font-weight:850;
+  }
+  .prog-dot{
+    flex:0 0 24px;
+    width:24px;
+    height:24px;
+    border:1px solid #bdc7d2;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    color:#657181;
+    font-size:11px;
+    font-weight:950;
+  }
+  .prog-item.current{
+    border-color:var(--gt-navy);
+    background:#f1f6fa;
+    color:var(--gt-navy);
+  }
+  .prog-item.current .prog-dot{
+    background:var(--gt-navy);
+    color:#fff;
+    border-color:var(--gt-navy);
+  }
+  .prog-item.complete{
+    border-color:#acd0b9;
+    background:#eef8f2;
+    color:#286647;
+  }
+  .prog-item.complete .prog-dot{
+    background:#2f7d59;
+    color:#fff;
+    border-color:#2f7d59;
+  }
+  .stage-complete{
+    display:none;
+    margin:18px 0 0;
+    border:1px solid #b8d7c3;
+    border-left:5px solid #2f7d59;
+    background:#f1f8f4;
+    padding:15px 16px;
+  }
+  .stage-complete.show{display:block}
+  .stage-complete-title{
+    color:#245f43;
+    font-size:17px;
+    font-weight:950;
+  }
+  .stage-complete-copy{
+    color:#4f5f58;
+    font-size:13px;
+    margin-top:3px;
+  }
+  .stage-complete-cn{
+    color:#6e654c;
+    font-size:12px;
+    margin-top:2px;
+  }
+  .stage-actions{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    margin-top:11px;
+  }
+  .stage-action{
+    border:1px solid var(--gt-navy);
+    background:#fff;
+    color:var(--gt-navy);
+    padding:8px 12px;
+    cursor:pointer;
+    font-weight:850;
+  }
+  .stage-action.continue{
+    background:var(--gt-navy);
+    color:#fff;
+  }
+  .stage-action:hover{background:#f7fafc}
+  .stage-action.continue:hover{background:var(--gt-navy-deep)}
+  .path-complete-note{
+    margin-top:9px;
+    font-size:12px;
+    color:#607064;
+  }
+  @media(max-width:900px){
+    .prog-row{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:580px){
+    .prog-head{display:block}
+    .prog-help{margin-top:3px}
+    .prog-row{grid-template-columns:1fr}
+  }
+
+  
+
+  /* Final learning experience styles */
+  .foundation-celebration{
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(0,48,87,.16);
+    backdrop-filter:blur(2px);
+    overflow:hidden;
+  }
+  .foundation-celebration.show{display:flex}
+  .celebration-card{
+    position:relative;
+    z-index:2;
+    width:min(520px,92vw);
+    background:#fff;
+    border-top:6px solid var(--gt-gold);
+    box-shadow:0 24px 70px rgba(0,48,87,.24);
+    padding:28px 28px 24px;
+    text-align:center;
+    animation:celebrationPop .42s cubic-bezier(.2,.85,.28,1.2) both;
+  }
+  .celebration-symbol{font-size:48px;line-height:1;margin-bottom:9px}
+  .celebration-card h2{
+    margin:0;
+    color:var(--gt-navy);
+    font-size:28px;
+    line-height:1.15;
+  }
+  .celebration-card p{
+    margin:10px auto 0;
+    max-width:420px;
+    color:#566173;
+    font-size:14px;
+  }
+  .celebration-card .zh{
+    margin-top:5px;
+    color:#725d35;
+    font-size:13px;
+  }
+  .celebration-mini{
+    margin-top:13px;
+    color:#718096;
+    font-size:11px;
+  }
+  .celebration-actions{
+    margin-top:20px;
+    display:flex;
+    justify-content:center;
+  }
+  .celebration-done{
+    min-width:128px;
+    border:1px solid var(--gt-navy);
+    background:var(--gt-navy);
+    color:#fff;
+    padding:10px 18px;
+    cursor:pointer;
+    font-weight:900;
+    font-size:15px;
+  }
+  .celebration-done:hover{background:var(--gt-navy-deep)}
+  .celebration-done:focus-visible{
+    outline:3px solid rgba(179,163,105,.48);
+    outline-offset:3px;
+  }
+  .confetti-piece{
+    position:absolute;
+    top:-12vh;
+    width:10px;
+    height:18px;
+    opacity:.92;
+    border-radius:2px;
+    animation:confettiFall var(--fall,1.8s) linear var(--delay,0s) forwards;
+  }
+  @keyframes celebrationPop{
+    from{opacity:0;transform:translateY(12px) scale(.94)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+  @keyframes confettiFall{
+    0%{transform:translate3d(0,-10vh,0) rotate(0deg)}
+    100%{transform:translate3d(var(--drift,20px),115vh,0) rotate(var(--spin,620deg))}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .celebration-card{animation:none}
+    .confetti-piece{display:none}
+  }
+
+  
+  /* Final learning experience styles */
+  .subprog-wrap{
+    margin:0 0 16px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    background:#f8fafc;
+  }
+  .subprog-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:9px;
+  }
+  .subprog-title{
+    color:var(--gt-navy);
+    font-size:12px;
+    font-weight:950;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .subprog-help{
+    color:#6f7b8b;
+    font-size:11.5px;
+    text-align:right;
+  }
+  .subprog-row{
+    display:grid;
+    gap:7px;
+  }
+  .subprog-row.five{grid-template-columns:repeat(5,1fr)}
+  .subprog-row.four{grid-template-columns:repeat(4,1fr)}
+  .subprog-item{
+    border:1px solid #d7dde5;
+    background:#fff;
+    min-height:54px;
+    padding:7px 8px;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:#667284;
+  }
+  .subprog-dot{
+    flex:0 0 23px;
+    width:23px;
+    height:23px;
+    border:1px solid #bdc7d2;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:950;
+    background:#fff;
+    color:#667284;
+  }
+  .subprog-copy{
+    min-width:0;
+    line-height:1.15;
+  }
+  .subprog-copy strong{
+    display:block;
+    color:var(--gt-navy);
+    font-size:12px;
+    font-weight:900;
+  }
+  .subprog-copy small{
+    display:block;
+    margin-top:3px;
+    color:#7b8694;
+    font-size:10.5px;
+  }
+  .subprog-item.complete{
+    border-color:#afd2bc;
+    background:#eef8f2;
+    color:#286647;
+  }
+  .subprog-item.complete .subprog-dot{
+    background:#2f7d59;
+    border-color:#2f7d59;
+    color:#fff;
+  }
+  .subprog-item.partial{
+    border-color:#d9c77f;
+    background:#fffdf4;
+  }
+  .subprog-item.partial .subprog-dot{
+    width:31px;
+    flex-basis:31px;
+    border-radius:12px;
+    border-color:#b89b39;
+    color:#7d681f;
+    background:#fffaf0;
+  }
+  .decode-tab.sub-complete::after,
+  .lesson-tab.sub-complete::after{
+    content:"  ✓";
+    color:#2f7d59;
+    font-weight:950;
+  }
+  .decode-tab.active.sub-complete::after,
+  .lesson-tab.active.sub-complete::after{
+    color:#dff3e6;
+  }
+  @media(max-width:920px){
+    .subprog-row.five{grid-template-columns:repeat(3,1fr)}
+    .subprog-row.four{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:580px){
+    .subprog-head{display:block}
+    .subprog-help{text-align:left;margin-top:3px}
+    .subprog-row.five,.subprog-row.four{grid-template-columns:1fr}
+  }
+
+    @media(max-width:1000px){.decode-path{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:640px){.decode-path{grid-template-columns:1fr}}
+
+  /* =========================================================
+     WORKING V3 — MULTI-SCENARIO DECISIONS + MULTI-ROUND CHALLENGES
+     ========================================================= */
+  .scenario-progress,
+  .challenge-round{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 8px;
+    border:1px solid #cfd7e1;
+    background:#f8fafc;
+    color:#536174;
+    font-size:11px;
+    font-weight:850;
+  }
+  .scenario-next,
+  .challenge-next{
+    display:none;
+    margin-top:10px;
+    border:1px solid var(--gt-navy);
+    background:var(--gt-navy);
+    color:#fff;
+    padding:8px 12px;
+    cursor:pointer;
+    font-weight:850;
+  }
+  .scenario-next.show,
+  .challenge-next.show{display:inline-block}
+  .scenario-next:hover,
+  .challenge-next:hover{background:var(--gt-navy-deep)}
+
+  .scenario-completion-line{
+    margin-top:8px;
+    color:#657286;
+    font-size:12px;
+  }
+
+  .challenge-card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .challenge-card-head .challenge-prompt{margin:0}
+
+  .challenge-mini-progress{
+    margin-top:8px;
+    color:#657286;
+    font-size:11.5px;
+  }
+  .foundation-celebration{
+    cursor:default;
+  }
+  .celebration-card{
+    cursor:default;
+  }
+
+
+  /* Final learning experience styles */
+  .act-challenge{
+    margin-top:16px;
+    border:1px solid var(--line);
+    background:#fff;
+    padding:16px;
+  }
+  .act-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:12px;
+  }
+  .act-title{
+    color:var(--gt-navy);
+    font-size:18px;
+    font-weight:950;
+  }
+  .act-sub{
+    margin-top:3px;
+    color:#657286;
+    font-size:12px;
+    line-height:1.4;
+  }
+  .act-badge{
+    flex:0 0 auto;
+    border:1px solid #d3dbe5;
+    background:#f8fafc;
+    color:#536174;
+    padding:5px 8px;
+    font-size:11px;
+    font-weight:850;
+  }
+  .turn-strip{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+    margin:12px 0 14px;
+  }
+  .turn-step{
+    border:1px solid #d8dee7;
+    background:#fff;
+    padding:9px 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:#667284;
+    font-size:12px;
+    font-weight:850;
+  }
+  .turn-step .turn-num{
+    width:24px;
+    height:24px;
+    flex:0 0 24px;
+    border-radius:50%;
+    border:1px solid #bcc7d3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    font-weight:950;
+  }
+  .turn-step.active{
+    border-color:var(--gt-navy);
+    background:#f1f6fa;
+    color:var(--gt-navy);
+  }
+  .turn-step.active .turn-num{
+    border-color:var(--gt-navy);
+    background:var(--gt-navy);
+    color:#fff;
+  }
+  .turn-step.done{
+    border-color:#afd2bc;
+    background:#eef8f2;
+    color:#286647;
+  }
+  .turn-step.done .turn-num{
+    border-color:#2f7d59;
+    background:#2f7d59;
+    color:#fff;
+  }
+  .practice-hand-label{
+    color:#657286;
+    font-size:11px;
+    font-weight:850;
+    margin-bottom:7px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .practice-hand{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:flex-end;
+    min-height:92px;
+    padding:12px;
+    border:1px dashed #9aabbe;
+    background:#fbfcfd;
+  }
+  .practice-tile{
+    position:relative;
+    border:2px solid #ccd5df;
+    background:#fff;
+    padding:7px;
+    min-width:56px;
+    min-height:72px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:default;
+  }
+  .practice-tile .glyph{
+    font-size:44px;
+  }
+  .practice-tile.drawn{
+    border-color:var(--gt-gold-dark);
+    background:#fffaf0;
+    box-shadow:0 0 0 3px rgba(179,163,105,.12);
+  }
+  .practice-tile.drawn::after{
+    content:"DRAWN";
+    position:absolute;
+    top:-10px;
+    right:-6px;
+    background:#8b7626;
+    color:#fff;
+    font-size:8px;
+    font-weight:900;
+    padding:2px 4px;
+    letter-spacing:.04em;
+  }
+  .practice-tile.discardable{
+    cursor:pointer;
+  }
+  .practice-tile.discardable:hover{
+    border-color:var(--gt-navy);
+    transform:translateY(-2px);
+  }
+  .practice-tile.correct-discard{
+    border-color:#2f7d59;
+    background:#eef8f2;
+  }
+  .practice-tile.wrong-discard{
+    border-color:#c94b4b;
+    background:#fff4f4;
+  }
+  .turn-action-area{
+    margin-top:14px;
+    border-top:1px solid #e1e6ec;
+    padding-top:13px;
+  }
+  .turn-primary{
+    border:1px solid var(--gt-navy);
+    background:var(--gt-navy);
+    color:#fff;
+    padding:9px 13px;
+    cursor:pointer;
+    font-weight:900;
+  }
+  .turn-primary:hover{background:var(--gt-navy-deep)}
+  .turn-primary:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+  }
+  .turn-eval{
+    display:none;
+    margin-top:10px;
+  }
+  .turn-eval.show{display:block}
+  .turn-feedback{
+    display:none;
+    margin-top:10px;
+    padding:10px 12px;
+    border-left:4px solid transparent;
+    font-size:12.5px;
+    line-height:1.45;
+  }
+  .turn-feedback.show{display:block}
+  .turn-feedback.good{
+    background:#eef8f2;
+    border-color:#2f7d59;
+  }
+  .turn-feedback.bad{
+    background:#fff2f2;
+    border-color:#c94b4b;
+  }
+  .turn-next-instruction{
+    display:none;
+    margin-top:10px;
+    color:#47566a;
+    font-size:12.5px;
+  }
+  .turn-next-instruction.show{display:block}
+  .act-complete{
+    display:none;
+    margin-top:12px;
+    padding:11px 13px;
+    border:1px solid #afd2bc;
+    background:#eef8f2;
+    color:#286647;
+    font-weight:900;
+  }
+  .act-complete.show{display:block}
+  .turn-reset{
+    display:none;
+    margin-top:10px;
+    border:1px solid var(--gt-navy);
+    background:#fff;
+    color:var(--gt-navy);
+    padding:8px 11px;
+    cursor:pointer;
+    font-weight:850;
+  }
+  .turn-reset.show{display:inline-block}
+  @media(max-width:760px){
+    .turn-strip{grid-template-columns:1fr}
+    .act-head{display:block}
+    .act-badge{display:inline-block;margin-top:8px}
+  }
+
+
+  /* Final learning experience styles */
+  .practice-tile.drawn{
+    margin-left:24px;
+  }
+  .practice-tile.drawn::before{
+    content:"";
+    position:absolute;
+    left:-15px;
+    top:7px;
+    bottom:7px;
+    border-left:1px dashed #b7a66b;
+  }
+  .practice-tile.draw-enter{
+    animation:miniTurnDrawIn .62s cubic-bezier(.18,.78,.28,1) both;
+    transform-origin:center;
+  }
+  @keyframes miniTurnDrawIn{
+    0%{
+      opacity:0;
+      transform:translateX(58px) translateY(-16px) rotate(4deg) scale(.92);
+    }
+    65%{
+      opacity:1;
+      transform:translateX(-4px) translateY(1px) rotate(-1deg) scale(1.02);
+    }
+    100%{
+      opacity:1;
+      transform:translateX(0) translateY(0) rotate(0) scale(1);
+    }
+  }
+  .mini-turn-roundbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin:0 0 10px;
+    padding:8px 10px;
+    border:1px solid #d9e0e8;
+    background:#f8fafc;
+  }
+  .mini-turn-roundbar strong{
+    color:var(--gt-navy);
+  }
+  .mini-turn-round-progress{
+    color:#667284;
+    font-size:12px;
+    font-weight:850;
+  }
+  .next-mini-turn{
+    display:none;
+    margin-top:10px;
+    border:1px solid var(--gt-navy);
+    background:var(--gt-navy);
+    color:#fff;
+    padding:9px 13px;
+    cursor:pointer;
+    font-weight:900;
+  }
+  .next-mini-turn.show{display:inline-block}
+  .next-mini-turn:hover{background:var(--gt-navy-deep)}
+  .wall-cue{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    margin-left:10px;
+    color:#687587;
+    font-size:11.5px;
+    vertical-align:middle;
+  }
+  .wall-stack{
+    display:inline-flex;
+    gap:2px;
+    align-items:center;
+  }
+  .wall-tile{
+    width:17px;
+    height:24px;
+    border:1px solid #8998aa;
+    border-radius:2px;
+    background:
+      linear-gradient(135deg,#eef3f8 0 45%,#d6e0ea 45% 55%,#eef3f8 55% 100%);
+    box-shadow:1px 1px 0 #c6d0da;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .practice-tile.draw-enter{animation:none}
+  }
+
+
+  /* V0.6.6 Working V3 — regroup drawn tile + remove accepted discard */
+  .practice-tile.regroup-enter{
+    animation:miniTurnRegroup .34s ease-out both;
+  }
+  @keyframes miniTurnRegroup{
+    0%{opacity:.70;transform:translateY(-5px) scale(.98)}
+    100%{opacity:1;transform:translateY(0) scale(1)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .practice-tile.regroup-enter{animation:none}
+  }
+
+
+  /* Final learning experience styles */
+  .practice-tile.draw-organizable{
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+  }
+  .practice-tile.draw-organizable:hover{
+    border-color:var(--gt-navy);
+    box-shadow:0 0 0 3px rgba(0,48,87,.08);
+  }
+  .practice-tile.draw-organizable.dragging{
+    cursor:grabbing;
+    z-index:50;
+    box-shadow:0 12px 24px rgba(0,48,87,.22);
+    transition:none !important;
+  }
+  .practice-hand.drag-active{
+    border-color:var(--gt-navy);
+    background:#f7fafc;
+  }
+  .practice-tile.drop-near{
+    border-color:#b3a369;
+    box-shadow:0 0 0 3px rgba(179,163,105,.14);
+  }
+  .organize-instruction{
+    display:none;
+    margin-top:10px;
+    padding:10px 12px;
+    border-left:4px solid var(--gt-gold);
+    background:#fffdf7;
+    color:#4c596b;
+    font-size:12.5px;
+    line-height:1.45;
+  }
+  .organize-instruction.show{display:block}
+  .organize-instruction strong{color:var(--gt-navy)}
+  .organize-status{
+    display:inline-block;
+    margin-left:7px;
+    padding:2px 6px;
+    border:1px solid #d7c983;
+    background:#fffaf0;
+    color:#756421;
+    font-size:10px;
+    font-weight:900;
+    vertical-align:middle;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .practice-tile.draw-organizable{transition:none}
+  }
+
+
+  /* Final learning experience styles */
+  .practice-tile.draw-organizable{
+    cursor:none;
+  }
+  .drag-hand-cue{
+    position:fixed;
+    left:0;
+    top:0;
+    z-index:9999;
+    pointer-events:none;
+    display:none;
+    width:54px;
+    height:54px;
+    align-items:center;
+    justify-content:center;
+    font-size:46px;
+    line-height:1;
+    filter:drop-shadow(0 3px 4px rgba(0,0,0,.22));
+    transform:translate(12px,-38px);
+    transform-origin:center;
+    user-select:none;
+  }
+  .drag-hand-cue.show{display:flex}
+  .drag-hand-cue.grabbing{
+    font-size:48px;
+    transform:translate(10px,-36px) scale(1.08);
+  }
+  @media (prefers-reduced-motion: reduce){
+    .drag-hand-cue,
+    .drag-hand-cue.grabbing{
+      transform:translate(12px,-38px);
+    }
+  }
+
+
+  /* Final learning experience styles */
+  .practice-tile.discardable{
+    cursor:none;
+    touch-action:none;
+    user-select:none;
+  }
+  .practice-tile.discardable:hover{
+    border-color:var(--gt-navy);
+    box-shadow:0 0 0 3px rgba(0,48,87,.08);
+  }
+  .practice-tile.discard-dragging{
+    z-index:55;
+    box-shadow:0 12px 24px rgba(0,48,87,.22);
+    transition:none !important;
+  }
+  .practice-hand.discard-active{
+    border-color:#c94b4b;
+    background:#fffafa;
+  }
+  .discard-drag-note{
+    display:none;
+    margin-top:8px;
+    padding:8px 10px;
+    border-left:4px solid #c94b4b;
+    background:#fff7f7;
+    color:#5a5f6a;
+    font-size:12px;
+    line-height:1.4;
+  }
+  .discard-drag-note.show{display:block}
+
+
+  /* Final learning experience styles */
+  .celebration-card{
+    max-width:560px;
+    padding:34px 38px 30px;
+    text-align:center;
+  }
+  .celebration-symbol{
+    font-size:64px;
+    line-height:1;
+    margin-bottom:12px;
+  }
+  .celebration-card h2{
+    font-size:34px;
+    line-height:1.15;
+    margin:0 0 12px;
+  }
+  .celebration-main-copy{
+    font-size:19px;
+    line-height:1.4;
+    margin:0;
+  }
+  .celebration-main-zh{
+    margin-top:6px;
+    font-size:16px;
+    line-height:1.45;
+  }
+  .celebration-actions{
+    margin-top:22px;
+  }
+  .celebration-done{
+    min-width:150px;
+    font-size:16px;
+    padding:11px 20px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="onb-app" id="v06Onboarding">
+  <div class="onb-topbar">
+    <div class="onb-brand">From Symbols to Social Play</div>
+    <div class="onb-version">Prototype V0.6.9 · Start</div>
+  </div>
+
+  <section id="v06HookScreen" class="onb-screen">
+    <div class="onb-panel onb-hero">
+      <div class="onb-eyebrow">Step 0 · Curiosity Hook</div>
+      <h1 class="onb-title">Mahjong looks complicated.<br>But can you already read this tile?</h1>
+      <p class="onb-lead">
+        <strong>No Mahjong or Chinese knowledge needed.</strong>
+        Just take a guess.
+      </p>
+
+      <div class="onb-challenge">
+        <div class="onb-challenge-title">Which one do you think is <strong>5 Dots</strong>?</div>
+        <div class="onb-note">Hint only if you need it: look for something you can count.</div>
+
+        <div class="onb-tile-grid">
+          <button class="onb-tile-choice" data-onb-value="3" aria-label="Option A">
+            <span class="onb-glyph">🀛</span>
+            <span class="onb-option">Option A</span>
+          </button>
+          <button class="onb-tile-choice" data-onb-value="5" aria-label="Option B">
+            <span class="onb-glyph">🀝</span>
+            <span class="onb-option">Option B</span>
+          </button>
+          <button class="onb-tile-choice" data-onb-value="7" aria-label="Option C">
+            <span class="onb-glyph">🀟</span>
+            <span class="onb-option">Option C</span>
+          </button>
+        </div>
+
+        <div id="v06HookFeedback" class="onb-feedback" aria-live="polite"></div>
+
+        <div id="v06HookActions" class="onb-actions" style="display:none">
+          <button id="v06ShowOrientation" class="onb-primary">Show me what comes next →</button>
+          <button id="v06TryHookAgain" class="onb-secondary">Try the same idea again</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="v06Orientation" class="onb-panel onb-orientation">
+    <div class="onb-orientation-head">
+      <div class="onb-orientation-copy">
+        <div class="onb-eyebrow">Orientation</div>
+        <h2>Your 5–10 Minute Learning Path</h2>
+        <div class="onb-sub">You already decoded one Mahjong tile. Now build from that first success.</div>
+      </div>
+      <div class="onb-ghosts" aria-hidden="true">
+        <span class="onb-ghost">🀙</span>
+        <span class="onb-ghost">🀝</span>
+        <span class="onb-ghost">🀡</span>
+      </div>
+    </div>
+
+    <div class="onb-benefits">
+      <div class="onb-benefit">
+        <div class="onb-benefit-icon">文</div>
+        <div class="onb-benefit-title">No Chinese Required</div>
+      </div>
+      <div class="onb-benefit">
+        <div class="onb-benefit-icon">⏱</div>
+        <div class="onb-benefit-title">5–10 Minutes</div>
+      </div>
+      <div class="onb-benefit">
+        <div class="onb-benefit-icon">4</div>
+        <div class="onb-benefit-title">4 Short Steps</div>
+      </div>
+      <div class="onb-benefit">
+        <div class="onb-benefit-icon">↻</div>
+        <div class="onb-benefit-title">Learn at Your Pace</div>
+      </div>
+    </div>
+
+    <div class="onb-trust">
+      <div class="onb-trust-icon">🛡</div>
+      <div>
+        <strong>Local &amp; private.</strong>
+        Your activity stays on this device. No cloud upload, no account, and no network connection required.
+        <span class="onb-trust-cn">本地运行；学习活动仅保留在当前设备，无需账号，也不会上传云端。</span>
+      </div>
+    </div>
+
+    <div class="onb-path-intro"><strong>Four simple things. One step at a time.</strong></div>
+
+    <div class="onb-path">
+      <div class="onb-path-step">
+        <div class="onb-step-no">Step 1</div>
+        <div class="onb-step-title">Recognize the Tiles</div>
+        <div class="onb-step-desc">See patterns, not Chinese.</div>
+      </div>
+      <div class="onb-path-step">
+        <div class="onb-step-no">Step 2</div>
+        <div class="onb-step-title">Build &amp; Call</div>
+        <div class="onb-step-desc">Make a pattern. Learn the call.</div>
+      </div>
+      <div class="onb-path-step">
+        <div class="onb-step-no">Step 3</div>
+        <div class="onb-step-title">Make a Decision</div>
+        <div class="onb-step-desc">Choose what to do.</div>
+      </div>
+      <div class="onb-path-step">
+        <div class="onb-step-no">Step 4</div>
+        <div class="onb-step-title">Try It Yourself</div>
+        <div class="onb-step-desc">Same ideas. Fewer hints.</div>
+      </div>
+    </div>
+
+    <div class="onb-bottom">
+      <div>
+        <strong>Goal:</strong> make the first few minutes of Mahjong feel understandable, manageable, and worth continuing.
+        <div class="onb-bottom-cn">目标：让麻将最初几分钟的学习变得容易理解、容易上手，并愿意继续学下去。</div>
+      </div>
+      <button id="v06StartLearning" class="onb-primary">Start Learning →</button>
+    </div>
+  </section>
+</div>
+
+
+<div id="foundationCelebration"
+     class="foundation-celebration"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="foundationCelebrationTitle"
+     aria-describedby="foundationCelebrationDesc">
+  <div id="confettiLayer" aria-hidden="true"></div>
+  <div class="celebration-card">
+    <div class="celebration-symbol">🎉</div>
+    <h2 id="foundationCelebrationTitle">Foundation Path Complete!</h2>
+    <p id="foundationCelebrationDesc" class="celebration-main-copy">You completed all four foundation steps.</p>
+    <div class="zh celebration-main-zh">四个基础学习阶段全部完成！</div>
+    <div class="celebration-actions">
+      <button id="foundationCelebrationDone" class="celebration-done" type="button">Done / 完成</button>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="v06MainExperience" style="display:none;">
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>From Symbols to Social Play</h1>
+        <p class="subtitle">An Interactive Mahjong Learning Experience for International Beginners</p>
+        <div class="cn-subtitle">从符号到社交牌桌：面向国际初学者的互动麻将学习体验</div>
+      </div>
+      <div class="version">Prototype V0.6.9 · HTML5</div>
+    </div>
+    <div class="intro-grid">
+      <div class="intro-copy">
+        <p><strong>No Chinese required.</strong> Learn the rules in English, then connect four essential Mandarin table calls to the patterns and decisions where they are actually used.</p>
+        <p><strong>无需中文基础。</strong> 先用英文理解规则，再把四个核心中文牌桌口令与真实牌型和操作联系起来。</p>
+      </div>
+      <div class="four-call-note">
+        <div class="eyebrow">Learning pathway</div>
+        <div class="flow">Hear → Recognize → Say → Use</div>
+        <div class="zh">听懂 → 辨认 → 模仿说出 → 在牌局中使用</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="call-strip" aria-label="Essential MCR table calls">
+    <div class="call-card"><div class="call-id"><div class="word">吃</div><div class="pinyin">chī</div></div><div class="meaning"><strong>Chi</strong>claim a Chow</div><button class="listen call-mini-listen" data-say="吃" aria-label="Listen to Chi, 吃"></button></div>
+    <div class="call-card"><div class="call-id"><div class="word">碰</div><div class="pinyin">pèng</div></div><div class="meaning"><strong>Pung</strong>claim a triplet</div><button class="listen call-mini-listen" data-say="碰" aria-label="Listen to Pung, 碰"></button></div>
+    <div class="call-card"><div class="call-id"><div class="word">杠</div><div class="pinyin">gàng</div></div><div class="meaning"><strong>Kong</strong>declare four identical tiles</div><button class="listen call-mini-listen" data-say="杠" aria-label="Listen to Kong, 杠"></button></div>
+    <div class="call-card"><div class="call-id"><div class="word">和</div><div class="pinyin">hú</div></div><div class="meaning"><strong>Hu</strong>declare Mahjong / win</div><button class="listen call-mini-listen" data-say="和" aria-label="Listen to Hu, 和"></button></div>
+  </section>
+
+
+  <section class="prog-wrap" id="globalProgress" aria-label="Learning progress">
+    <div class="prog-head">
+      <div class="prog-title">Your Progress / 学习进度</div>
+      <div class="prog-help">Complete the core checkpoints inside each step. You may still review any activity.</div>
+    </div>
+    <div class="prog-row">
+      <div class="prog-item current" data-prog-stage="1">
+        <span class="prog-dot">1</span><span>Recognize</span>
+      </div>
+      <div class="prog-item" data-prog-stage="2">
+        <span class="prog-dot">2</span><span>Build &amp; Call</span>
+      </div>
+      <div class="prog-item" data-prog-stage="3">
+        <span class="prog-dot">3</span><span>Decide</span>
+      </div>
+      <div class="prog-item" data-prog-stage="4">
+        <span class="prog-dot">4</span><span>Try It Yourself</span>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav" aria-label="Learning modules">
+    <button class="step active" data-target="learn"><div class="k">Module 1 / 模块 1</div><div class="t">Learn the Tiles</div><div class="s">Recognize visual families / 认牌</div></button>
+    <button class="step" data-target="patterns"><div class="k">Module 2 / 模块 2</div><div class="t">Patterns & Calls</div><div class="s">Connect pattern + word + sound / 建立联系</div></button>
+    <button class="step" data-target="decide"><div class="k">Module 3 / 模块 3</div><div class="t">Make a Decision</div><div class="s">Use a rule in context / 情境决策</div></button>
+    <button class="step" data-target="challenge"><div class="k">Module 4 / 模块 4</div><div class="t">Quick Challenge</div><div class="s">Reduced support / 减少提示</div></button>
+  </nav>
+
+  <main>
+    <!-- MODULE 1 -->
+    <section id="learn" class="panel active">
+      <div class="section-head">
+        <div>
+          <h2>Decode the Tiles</h2><div class="zh-title">学会看懂麻将牌</div>
+          <p class="lead">Do not memorize dozens of pictures at once. Start with simple visual strategies, then move toward the more symbolic tiles.</p>
+        </div>
+        <div class="goal-tag"><strong>Learning goal / 学习目标</strong>See a tile → use a visual cue → identify its family and basic value.</div>
+      </div>
+
+      <div class="decode-path" aria-label="Recommended decoding sequence">
+        <div class="decode-stage"><div class="n">Step 1</div><div class="name">Dots / 饼（筒）</div><div class="why">Count circles / 数圆圈</div></div>
+        <div class="decode-stage"><div class="n">Step 2</div><div class="name">Bamboo / 条</div><div class="why">Count patterns; notice 1 Bamboo / 数图案，注意一条特例</div></div>
+        <div class="decode-stage"><div class="n">Step 3</div><div class="name">Characters / 万</div><div class="why">Numeral + 万 suit marker / 中文数字 + 万</div></div>
+        <div class="decode-stage"><div class="n">Step 4</div><div class="name">Honors / 字牌</div><div class="why">Direct symbol recognition / 符号对应</div></div>
+        <div class="decode-stage"><div class="n">Step 5</div><div class="name">Mixed Recognition / 混合识别</div><div class="why">Mix families / 综合判断</div></div>
+      </div>
+
+
+      <div class="subprog-wrap" id="module1SubProgress">
+        <div class="subprog-head">
+          <div class="subprog-title">Inside this step / 本阶段进度</div>
+          <div class="subprog-help">Complete all four family Quick Checks + 3 Mixed Recognition items.</div>
+        </div>
+        <div class="subprog-row five">
+          <div class="subprog-item" data-m1-part="dots" data-sub-index="1">
+            <span class="subprog-dot">1</span>
+            <span class="subprog-copy"><strong>Dots / 饼（筒）</strong><small>Quick Check</small></span>
+          </div>
+          <div class="subprog-item" data-m1-part="bamboo" data-sub-index="2">
+            <span class="subprog-dot">2</span>
+            <span class="subprog-copy"><strong>Bamboo / 条</strong><small>Quick Check</small></span>
+          </div>
+          <div class="subprog-item" data-m1-part="characters" data-sub-index="3">
+            <span class="subprog-dot">3</span>
+            <span class="subprog-copy"><strong>Characters / 万</strong><small>Quick Check</small></span>
+          </div>
+          <div class="subprog-item" data-m1-part="honors" data-sub-index="4">
+            <span class="subprog-dot">4</span>
+            <span class="subprog-copy"><strong>Honors / 字牌</strong><small>Quick Check</small></span>
+          </div>
+          <div class="subprog-item" data-m1-part="mixed" data-sub-index="5">
+            <span class="subprog-dot">5</span>
+            <span class="subprog-copy"><strong>Mixed Recognition</strong><small>3 questions / 3 题</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decode-tabs">
+        <button class="decode-tab active" data-decode="dots">1 · Dots / 饼（筒）</button>
+        <button class="decode-tab" data-decode="bamboo">2 · Bamboo / 条</button>
+        <button class="decode-tab" data-decode="characters">3 · Characters / 万</button>
+        <button class="decode-tab" data-decode="honors">4 · Honors / 字牌</button>
+        <button class="decode-tab" data-decode="mixed">5 · Mixed Recognition / 混合识别</button>
+      </div>
+
+      <div id="decode-dots" class="decode-lesson active">
+        <div class="strategy-grid">
+          <div class="strategy-card">
+            <h3>Dots / 饼子（常称筒子）</h3>
+            <div class="big-rule">Visual strategy: count the circles.</div>
+            <div class="cn-rule">识别方法：数牌面上的圆圈。</div>
+            <p class="rule">For most Dot tiles, the number of circles directly tells you the tile value. This makes Dots a useful starting point for a complete beginner.</p>
+            <p class="zh-rule">MCR 中文称“饼子牌”，日常也常称“筒子”。大多数这类牌可以直接通过圆圈数量判断数字，因此适合作为初学者的第一组牌。</p>
+          </div>
+          <div class="formation-box">
+            <div class="formation-label">Examples / 示例</div>
+            <div class="example-strip">
+              <div class="example-tile"><div class="tile"><span class="glyph">🀙</span></div><div class="label">1 Dot / 一筒</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀝</span></div><div class="label">5 Dots / 五筒</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀡</span></div><div class="label">9 Dots / 九筒</div></div>
+            </div>
+            <div class="formation-note"><strong>Pattern first:</strong> the learner can decode the value visually without knowing Chinese numerals.</div>
+          </div>
+        </div>
+        <div class="mini-check" data-mini="dots">
+          <h4>Quick check / 快速练习：What tile is this? <span class="quick-glyph" aria-label="7 Dots">🀟</span></h4>
+          <div class="answers"><button class="choice mini-answer" data-correct="false">5 Dots</button><button class="choice mini-answer" data-correct="true">7 Dots</button><button class="choice mini-answer" data-correct="false">9 Dots</button></div>
+          <div class="feedback mini-feedback"></div>
+        </div>
+      </div>
+
+      <div id="decode-bamboo" class="decode-lesson">
+        <div class="strategy-grid">
+          <div class="strategy-card">
+            <h3>Bamboo / 条子</h3>
+            <div class="big-rule">Visual strategy: count the bamboo-like marks.</div>
+            <div class="cn-rule">识别方法：多数情况下数竹节/条形图案。</div>
+            <p class="rule">Most Bamboo tiles use repeated bamboo-like marks. <strong>1 Bamboo is the special case:</strong> it uses a distinctive bird-like design rather than a single stick.</p>
+            <p class="zh-rule">大多数条子牌可通过条形图案数量识别；一条是特殊牌面，通常是明显的鸟形图案。</p>
+          </div>
+          <div class="formation-box">
+            <div class="formation-label">Examples / 示例</div>
+            <div class="example-strip">
+              <div class="example-tile"><div class="tile"><span class="glyph">🀐</span></div><div class="label">1 Bamboo / 一条 · special</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀓</span></div><div class="label">4 Bamboo / 四条</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀗</span></div><div class="label">8 Bamboo / 八条</div></div>
+            </div>
+            <div class="formation-note"><strong>Special case:</strong> remember the visual identity of 1 Bamboo, then use pattern counting for the rest.</div>
+          </div>
+        </div>
+        <div class="mini-check" data-mini="bamboo">
+          <h4>Quick check / 快速练习：Which tile is the special 1 Bamboo?</h4>
+          <div class="answers"><button class="choice mini-answer tile-choice" data-correct="true" aria-label="1 Bamboo"><span class="mini-tile-glyph">🀐</span></button><button class="choice mini-answer tile-choice" data-correct="false" aria-label="1 Dot"><span class="mini-tile-glyph">🀙</span></button><button class="choice mini-answer tile-choice" data-correct="false" aria-label="East Wind"><span class="mini-tile-glyph">🀀</span></button></div>
+          <div class="feedback mini-feedback"></div>
+        </div>
+      </div>
+
+      <div id="decode-characters" class="decode-lesson">
+        <div class="strategy-grid">
+          <div class="strategy-card">
+            <h3>Characters / 万字牌</h3>
+            <div class="big-rule">Visual strategy: numeral on top + 万/萬 suit marker below.</div>
+            <div class="cn-rule">识别方法：上部看中文数字，下部用“万/萬”确认花色。</div>
+            <p class="rule">You do not need general Chinese literacy. Learn only the nine numerals used on Character tiles, then recognize the recurring 万/萬 marker.</p>
+            <p class="zh-rule">不需要掌握完整中文，只需认识一到九的数字，并把下方反复出现的“万/萬”作为花色标志。</p>
+            <div class="numeral-key">
+              <div><strong>一</strong>1</div><div><strong>二</strong>2</div><div><strong>三</strong>3</div><div><strong>四</strong>4</div><div><strong>五</strong>5</div><div><strong>六</strong>6</div><div><strong>七</strong>7</div><div><strong>八</strong>8</div><div><strong>九</strong>9</div>
+            </div>
+          </div>
+          <div class="formation-box">
+            <div class="formation-label">Examples / 示例</div>
+            <div class="example-strip">
+              <div class="example-tile"><div class="tile"><span class="glyph">🀇</span></div><div class="label">一 + 万 → 1 Character</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀉</span></div><div class="label">三 + 万 → 3 Characters</div></div>
+              <div class="example-tile"><div class="tile"><span class="glyph">🀍</span></div><div class="label">七 + 万 → 7 Characters</div></div>
+            </div>
+            <div class="formation-note"><strong>Reusable decoding rule:</strong> read the number, then confirm the Character suit marker.</div>
+          </div>
+        </div>
+        <div class="mini-check" data-mini="characters">
+          <h4>Quick check / 快速练习：What is this tile? <span class="quick-glyph" aria-label="3 Characters">🀉</span></h4>
+          <div class="answers"><button class="choice mini-answer" data-correct="false">2 Characters</button><button class="choice mini-answer" data-correct="true">3 Characters</button><button class="choice mini-answer" data-correct="false">8 Characters</button></div>
+          <div class="feedback mini-feedback"></div>
+        </div>
+      </div>
+
+      <div id="decode-honors" class="decode-lesson">
+        <div class="strategy-grid">
+          <div class="strategy-card">
+            <h3>Honor Tiles / 字牌</h3>
+            <div class="big-rule">Visual strategy: learn direct symbol ↔ meaning pairs.</div>
+            <div class="cn-rule">识别方法：直接建立“符号 ↔ 英文含义”的对应关系。</div>
+            <p class="rule">Honors do not use a simple 1–9 counting rule. This prototype introduces the four Winds and three Dragons as a compact recognition set.</p>
+            <p class="zh-rule">字牌没有像筒子那样的数字规律。本学习体验把东南西北与中发白作为一个小型符号识别集合。</p>
+          </div>
+          <div class="formation-box">
+            <div class="formation-label">Winds & Dragons / 风牌与箭牌</div>
+            <div class="honor-map">
+              <div class="honor-item"><div class="symbol">東 / 🀀</div>East</div>
+              <div class="honor-item"><div class="symbol">南 / 🀁</div>South</div>
+              <div class="honor-item"><div class="symbol">西 / 🀂</div>West</div>
+              <div class="honor-item"><div class="symbol">北 / 🀃</div>North</div>
+              <div class="honor-item"><div class="symbol">中 / 🀄</div>Red Dragon</div>
+              <div class="honor-item"><div class="symbol">發 / 🀅</div>Green Dragon</div>
+              <div class="honor-item"><div class="symbol">白 / 🀆</div>White Dragon</div>
+            </div>
+            <div class="formation-note"><strong>Important distinction:</strong> these are Honor Tiles. Flower Tiles are a separate category and are outside the scope of this beginner learning path.</div>
+          </div>
+        </div>
+        <div class="mini-check" data-mini="honors">
+          <h4>Quick check / 快速练习：What does this tile represent? <span class="quick-glyph" aria-label="Red Dragon">🀄</span></h4>
+          <div class="answers"><button class="choice mini-answer" data-correct="true">Red Dragon</button><button class="choice mini-answer" data-correct="false">East Wind</button><button class="choice mini-answer" data-correct="false">White Dragon</button></div>
+          <div class="feedback mini-feedback"></div>
+        </div>
+      </div>
+
+      <div id="decode-mixed" class="decode-lesson">
+        <div class="mixed-practice" style="margin-top:0;border-top:0;padding-top:0">
+          <div class="strategy-grid" style="grid-template-columns:1fr">
+            <div class="strategy-card">
+              <h3>5. Mixed Recognition Practice / 混合识别练习</h3>
+              <div class="big-rule">Now mix the four tile families.</div>
+              <div class="cn-rule">现在把前面四类麻将牌混合起来进行识别。</div>
+              <p class="rule">Use the visual strategies you learned for Dots, Bamboo, Characters, and Honors. Complete three mixed questions to finish this step.</p>
+              <p class="zh-rule">使用前面学习的筒子、条子、万字牌和字牌识别方法。正确完成 3 道混合题后，本步骤才算完成。</p>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:0;margin-top:14px">
+            <div class="question-top"><div><div class="mini">Mixed Practice / 混合练习 · Question <span id="qnum">1</span> of 3</div><h3 id="quizPrompt">Which family does this tile belong to?</h3><div class="mini" id="quizPromptCn">这张牌属于哪一类？</div></div></div>
+            <div class="tile-wrap no-caption" style="margin-top:14px"><div class="tile"><span id="quizGlyph" class="glyph">🀙</span></div><div class="tile-caption"><span id="quizCaptionEn" class="en">1 Dot</span><span id="quizCaptionCn" class="cn">一筒</span></div></div>
+            <div id="quizAnswers" class="answers"></div>
+            <div id="quizFeedback" class="feedback"></div>
+            <div class="toolbar"><button id="nextQuiz" class="primary" style="display:none">Next / 下一题 →</button></div>
+          </div>
+        </div>
+      </div>
+
+        <div id="stageComplete1" class="stage-complete">
+          <div class="stage-complete-title">✓ Recognize complete</div>
+          <div class="stage-complete-copy">You completed all four tile-family Quick Checks and 3 Mixed Recognition questions.</div>
+          <div class="stage-complete-cn">你已经完成四类麻将牌的快速练习，并正确完成了 3 道混合识别题。</div>
+          <div class="stage-actions">
+            <button id="stage1More" class="stage-action">More Practice / 再练一组</button>
+            <button id="stage1Continue" class="stage-action continue">Continue → Build &amp; Call</button>
+          </div>
+        </div>
+    </section>
+
+    <!-- MODULE 2 -->
+    <section id="patterns" class="panel">
+      <div class="section-head">
+        <div>
+          <h2>Patterns & Table Calls</h2><div class="zh-title">牌型与牌桌口令</div>
+          <p class="lead">Connect what you see on the table with the English rule, the Chinese character, the sound, and the action you would take.</p>
+        </div>
+        <div class="goal-tag"><strong>Learning goal / 学习目标</strong>Pattern → meaning → Chinese call → table use.</div>
+      </div>
+
+
+      <div class="subprog-wrap" id="module2SubProgress">
+        <div class="subprog-head">
+          <div class="subprog-title">Inside this step / 本阶段进度</div>
+          <div class="subprog-help">Complete each pattern/call checkpoint. Chow / Chi includes both Try it + Build it.</div>
+        </div>
+        <div class="subprog-row four">
+          <div class="subprog-item" data-m2-part="chow" data-sub-index="1">
+            <span class="subprog-dot">1</span>
+            <span class="subprog-copy"><strong>Chow / Chi · 吃</strong><small>Try it + Build it</small></span>
+          </div>
+          <div class="subprog-item" data-m2-part="pung" data-sub-index="2">
+            <span class="subprog-dot">2</span>
+            <span class="subprog-copy"><strong>Pung / 碰</strong><small>Try it</small></span>
+          </div>
+          <div class="subprog-item" data-m2-part="kong" data-sub-index="3">
+            <span class="subprog-dot">3</span>
+            <span class="subprog-copy"><strong>Kong / 杠</strong><small>Try it</small></span>
+          </div>
+          <div class="subprog-item" data-m2-part="hu" data-sub-index="4">
+            <span class="subprog-dot">4</span>
+            <span class="subprog-copy"><strong>Hu / 和</strong><small>Try it</small></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lesson-tabs">
+        <button class="lesson-tab active" data-lesson="chow">Chow → Chi / 吃</button>
+        <button class="lesson-tab" data-lesson="pung">Pung / 碰</button>
+        <button class="lesson-tab" data-lesson="kong">Kong / 杠</button>
+        <button class="lesson-tab" data-lesson="hu">Hu / 和</button>
+      </div>
+
+      <div class="speak-practice" aria-label="Table-call pronunciation self-practice">
+        <div>
+          <h3>Speak the Table Call / 说出口令</h3>
+          <div class="speak-target"><span id="speakTargetWord" class="word">吃</span><span id="speakTargetPin" class="pin">chī</span><span id="speakTargetEn" class="en">Chi · claim a Chow</span></div>
+          <div class="mini">Listen to the model, record yourself, then replay your own voice. No pronunciation score is assigned.</div>
+          <div class="mini">先听示范，再录下自己的声音并回放自我比较；本练习不进行自动发音评分。</div>
+        </div>
+        <div>
+          <div class="record-controls">
+            <button id="hearPracticeTarget" class="record-btn">🔊 Hear model / 听示范</button>
+            <button id="startRecording" class="record-btn primary">🎙 Record / 录音</button>
+            <button id="stopRecording" class="record-btn" disabled>■ Stop / 停止</button>
+            <button id="playRecording" class="record-btn" disabled>▶ Play mine / 回放</button>
+            <button id="recordAgain" class="record-btn" disabled>↻ Record again / 重录</button>
+          </div>
+          <div id="recordStatus" class="record-status" aria-live="polite">Microphone access is requested only when you press Record. / 只有点击“录音”时才会请求麦克风权限。</div>
+          <div class="privacy-note">Your recording stays in this browser session and is not uploaded by this learning experience. / 录音仅保留在当前浏览器会话中，本单文件原型不会上传录音。</div>
+          <audio id="userRecording" preload="metadata"></audio>
+        </div>
+      </div>
+
+      <div id="lesson-chow" class="micro-lesson active">
+        <div class="association-grid">
+          <div class="term-box">
+            <div class="term-en">Chow pattern → Chi call</div><div class="term-cn">吃</div><div class="term-pin">chī</div>
+            <p class="rule">A Chow is three sequentially-numbered tiles of the same suit. In MCR, when the player to your left discards the needed tile, you may claim it by calling “Chi”.</p>
+            <p class="zh-rule">顺子由同一花色的三张连续序数牌组成；在国标麻将中，上家打出所需牌时，可报“吃”来完成顺子。</p>
+            <button class="listen" data-say="吃">🔊 Hear Chi / 听“吃”</button>
+            <div class="action-cue"><div><strong>Say / 说：</strong> 吃 · chī · Chi</div><div><strong>Do / 做：</strong> Expose your two tiles and combine them with the player-to-your-left’s discard to make the Chow.<br>取出自己的两张牌，与上家的弃牌组成顺子并摆明。</div></div>
+          </div>
+          <div class="formation-box">
+            <div class="formation-row">
+              <div><div class="formation-label">Your tiles / 你的牌</div><div class="mini-hand"><div class="tile"><span class="glyph">🀇</span></div><div class="tile"><span class="glyph">🀈</span></div></div></div>
+              <div class="plus">+</div>
+              <div><div class="formation-label">Left player's discard / 上家弃牌</div><div class="mini-hand"><div class="tile"><span class="glyph">🀉</span></div></div></div>
+              <div class="arrow">→</div>
+              <div><div class="formation-label">Chow / 顺子</div><div class="mini-hand"><div class="tile"><span class="glyph">🀇</span></div><div class="tile"><span class="glyph">🀈</span></div><div class="tile"><span class="glyph">🀉</span></div></div></div>
+            </div>
+            <div class="formation-note"><strong>Also possible:</strong> 1+3 with a discarded 2, or 2+3 with a discarded 1, as long as the final three tiles are consecutive and from the same numbered suit.</div>
+          </div>
+        </div>
+        <div class="try-box">
+          <h4>Try it / 试一试：Which group can form a Chow?</h4>
+          <div class="try-grid">
+            <button data-feedback="feedback-chow" class="try-option pattern-check pattern-tiles" data-correct="true">
+              <span class="try-tiles"><span class="try-tile">🀇</span><span class="try-tile">🀈</span><span class="try-tile">🀉</span></span>
+              <span class="try-label">1–2–3 Characters</span>
+            </button>
+            <button data-feedback="feedback-chow" class="try-option pattern-check pattern-tiles" data-correct="false">
+              <span class="try-tiles"><span class="try-tile">🀀</span><span class="try-tile">🀁</span><span class="try-tile">🀂</span></span>
+              <span class="try-label">East–South–West</span>
+            </button>
+          </div>
+          <div id="feedback-chow" class="feedback pattern-feedback"></div>
+        </div>
+        <div class="drag-lab">
+          <h4>Build it / 拖动构建：Make a Chow</h4>
+          <div class="mini">Drag or click three tiles into the workspace, then check your set. / 将三张牌拖入或点击放入区域，再检查组合。</div>
+          <div id="dragSource" class="drag-source"></div>
+          <div id="dragZone" class="dropzone"><span class="drop-hint">Drop/select three tiles here / 将三张牌放到这里</span></div>
+          <div class="toolbar"><button id="checkDrag" class="primary">Check / 检查</button><button id="resetDrag" class="secondary">Reset / 重置</button><button id="nextDrag" class="secondary next-example">Next Example / 换一题 →</button></div>
+          <div id="dragFeedback" class="feedback"></div>
+          <div id="dragTaskNote" class="solution-note">Reset clears your current selection but keeps the same problem. Next Example changes the surface features while preserving the Chow rule. / 重置用于重做同一道题；换一题会改变牌面，但保持相同的“顺子”规则。</div>
+        </div>
+      </div>
+
+      <div id="lesson-pung" class="micro-lesson">
+        <div class="association-grid">
+          <div class="term-box">
+            <div class="term-en">Pung</div><div class="term-cn">碰</div><div class="term-pin">pèng</div>
+            <p class="rule">A Pung is three identical tiles. If another player discards the tile that matches your pair, you can claim it and say “Pung.”</p>
+            <p class="zh-rule">刻子由三张完全相同的牌组成。手里已有一对时，可用他人打出的同牌完成“碰”。</p>
+            <button class="listen" data-say="碰">🔊 Hear Pung / 听“碰”</button>
+            <div class="action-cue"><div><strong>Say / 说：</strong> 碰 · pèng · Pung</div><div><strong>Do / 做：</strong> Expose your matching pair and combine it with the discard to form a Pung.<br>取出自己的对子，与他家弃牌组成刻子并摆明。</div></div>
+          </div>
+          <div class="formation-box">
+            <div class="formation-row">
+              <div><div class="formation-label">Your tiles / 你的牌</div><div class="mini-hand"><div class="tile"><span class="glyph">🀔</span></div><div class="tile"><span class="glyph">🀔</span></div></div></div>
+              <div class="plus">+</div>
+              <div><div class="formation-label">Another player's discard / 他人弃牌</div><div class="mini-hand"><div class="tile"><span class="glyph">🀔</span></div></div></div>
+              <div class="arrow">→</div>
+              <div><div class="formation-label">Pung / 刻子</div><div class="mini-hand"><div class="tile"><span class="glyph">🀔</span></div><div class="tile"><span class="glyph">🀔</span></div><div class="tile"><span class="glyph">🀔</span></div></div></div>
+            </div>
+            <div class="formation-note"><strong>Key contrast:</strong> unlike Chow, a Pung uses identical tiles, not a sequence.</div>
+          </div>
+        </div>
+        <div class="try-box"><h4>Try it / 试一试：Which set is a Pung?</h4><div class="try-grid">
+          <button data-feedback="feedback-pung" class="try-option pattern-check pattern-tiles" data-correct="true"><span class="try-tiles"><span class="try-tile">🀔</span><span class="try-tile">🀔</span><span class="try-tile">🀔</span></span><span class="try-label">three identical 5 Bamboo</span></button>
+          <button data-feedback="feedback-pung" class="try-option pattern-check pattern-tiles" data-correct="false"><span class="try-tiles"><span class="try-tile">🀇</span><span class="try-tile">🀈</span><span class="try-tile">🀉</span></span><span class="try-label">1–2–3 Characters</span></button>
+        </div><div id="feedback-pung" class="feedback pattern-feedback"></div></div>
+      </div>
+
+      <div id="lesson-kong" class="micro-lesson">
+        <div class="association-grid">
+          <div class="term-box">
+            <div class="term-en">Kong</div><div class="term-cn">杠</div><div class="term-pin">gàng</div>
+            <p class="rule">A Kong is four identical tiles. This prototype introduces the visible pattern and spoken call; full Kong timing and replacement-tile rules are deferred.</p>
+            <p class="zh-rule">杠由四张完全相同的牌组成。本学习体验先学习牌型与口令，完整的杠牌时机和补牌规则留待后续。</p>
+            <button class="listen" data-say="杠">🔊 Hear Kong / 听“杠”</button>
+            <div class="action-cue"><div><strong>Say / 说：</strong> 杠 · gàng · Kong</div><div><strong>Do / 做：</strong> Declare the four-tile Kong and take the required replacement tile from the end of the wall; detailed exposed/concealed timing is deferred.<br>报“杠”并完成四张相同牌的杠牌动作，再从牌墙末端补牌；明杠/暗杠的完整时序留待后续。</div></div>
+          </div>
+          <div class="formation-box">
+            <div class="formation-row" style="grid-template-columns:1fr auto 1fr">
+              <div><div class="formation-label">Pattern / 牌型</div><div class="mini-hand"><div class="tile"><span class="glyph">🀞</span></div><div class="tile"><span class="glyph">🀞</span></div><div class="tile"><span class="glyph">🀞</span></div><div class="tile"><span class="glyph">🀞</span></div></div></div>
+              <div class="arrow">→</div>
+              <div><div class="formation-label">Call / 口令</div><div style="font-size:34px;font-weight:950;color:var(--gt-navy)">杠 · gàng</div></div>
+            </div>
+            <div class="formation-note"><strong>Remember:</strong> Pung = three identical; Kong = four identical.</div>
+          </div>
+        </div>
+        <div class="try-box"><h4>Try it / 试一试：Which pattern is a Kong?</h4><div class="try-grid">
+          <button data-feedback="feedback-kong" class="try-option pattern-check pattern-tiles" data-correct="false"><span class="try-tiles"><span class="try-tile">🀞</span><span class="try-tile">🀞</span><span class="try-tile">🀞</span></span><span class="try-label">three identical tiles</span></button>
+          <button data-feedback="feedback-kong" class="try-option pattern-check pattern-tiles" data-correct="true"><span class="try-tiles"><span class="try-tile">🀞</span><span class="try-tile">🀞</span><span class="try-tile">🀞</span><span class="try-tile">🀞</span></span><span class="try-label">four identical tiles</span></button>
+        </div><div id="feedback-kong" class="feedback pattern-feedback"></div></div>
+      </div>
+
+      <div id="lesson-hu" class="micro-lesson">
+        <div class="association-grid">
+          <div class="term-box">
+            <div class="term-en">Hu / Mahjong / Win</div><div class="term-cn">和</div><div class="term-pin">hú</div>
+            <p class="rule">“Hu” is the declaration used when claiming a legal winning Mahjong hand. A common normal structure uses four sets and one pair; full MCR scoring requirements are intentionally deferred.</p>
+            <p class="zh-rule">“和”是宣布合法和牌时使用的规范口令。常见基本结构为四组牌加一对；完整国标麻将计分要求暂不展开。</p>
+            <button class="listen" data-say="和">🔊 Hear Hu / 听“和”</button>
+            <div class="action-cue"><div><strong>Say / 说：</strong> 和 · hú · Hu</div><div><strong>Do / 做：</strong> Declare the win first, then arrange and reveal the completed hand for confirmation; full scoring is deferred.<br>先报“和”，再整理并亮明完成的手牌供确认；完整计分留待后续。</div></div>
+          </div>
+          <div class="formation-box">
+            <div class="formation-label">Normal winning structure / 普通和牌结构</div>
+            <div class="mini-hand" style="justify-content:flex-start">
+              <div class="tile"><span class="glyph">🀇</span></div><div class="tile"><span class="glyph">🀈</span></div><div class="tile"><span class="glyph">🀉</span></div>
+              <div class="tile"><span class="glyph">🀐</span></div><div class="tile"><span class="glyph">🀑</span></div><div class="tile"><span class="glyph">🀒</span></div>
+              <div class="tile"><span class="glyph">🀙</span></div><div class="tile"><span class="glyph">🀚</span></div><div class="tile"><span class="glyph">🀛</span></div>
+              <div class="tile"><span class="glyph">🀄</span></div><div class="tile"><span class="glyph">🀄</span></div><div class="tile"><span class="glyph">🀄</span></div>
+              <div class="tile"><span class="glyph">🀀</span></div><div class="tile"><span class="glyph">🀀</span></div>
+            </div>
+            <div class="formation-note"><strong>Beginner focus:</strong> recognize a completed hand and connect it to the spoken call “和 / Hu”; scoring comes later.</div>
+          </div>
+        </div>
+        <div class="try-box"><h4>Try it / 试一试：What do you say when you declare a win?</h4><div class="try-grid"><button data-feedback="feedback-hu" class="try-option pattern-check" data-correct="true">和 · hú</button><button data-feedback="feedback-hu" class="try-option pattern-check" data-correct="false">碰 · pèng</button></div><div id="feedback-hu" class="feedback pattern-feedback"></div></div>
+      </div>
+
+      <div id="stageComplete2" class="stage-complete">
+        <div class="stage-complete-title">✓ Build &amp; Call complete</div>
+        <div class="stage-complete-copy">You completed the Chow / Chi, Pung, Kong, and Hu checkpoints; Chow also included a construction task.</div>
+        <div class="stage-complete-cn">你已经完成吃、碰、杠、和四个牌型与口令检查；“吃”还包含一次顺子构建任务。</div>
+        <div class="stage-actions">
+          <button id="stage2More" class="stage-action">More Practice / 换一题</button>
+          <button id="stage2Continue" class="stage-action continue">Continue → Make a Decision</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 3 -->
+    <section id="decide" class="panel">
+      <div class="section-head">
+        <div>
+          <h2>Make a Decision</h2><div class="zh-title">在简化牌局中做决定</div>
+          <p class="lead">Apply the rules across three short situations. Each scenario changes the game state so the learner must choose an action rather than memorize one answer.</p>
+        </div>
+        <div class="goal-tag"><strong>Learning goal / 学习目标</strong>Transfer pattern knowledge into legal actions across changing contexts.</div>
+      </div>
+
+      <div class="scenario">
+        <div class="card">
+          <div class="scenario-progress">Scenario <span id="scenarioNum">1</span> of 3 / 情境 <span id="scenarioNumCn">1</span>/3</div>
+          <h3 id="scenarioTitle">Can you claim this discard?</h3>
+          <p id="scenarioText">The player to your <strong>left</strong> discards <strong>3 Characters</strong>. You already hold 1 and 2 Characters.</p>
+          <p class="mini" id="scenarioTextCn">你左手边的玩家打出三万。你手里已有一万、二万。</p>
+
+          <div class="formation-box">
+            <div id="scenarioFormation" class="formation-row"></div>
+          </div>
+
+          <div class="answers">
+            <button class="choice decision" data-answer="chow">Call Chi <span class="subchoice">吃 · chī · claim a Chow</span></button>
+            <button class="choice decision" data-answer="pung">Call Pung <span class="subchoice">碰 · pèng</span></button>
+            <button class="choice decision" data-answer="kong">Call Kong <span class="subchoice">杠 · gàng</span></button>
+            <button class="choice decision" data-answer="pass">Pass <span class="subchoice">Do not claim</span></button>
+          </div>
+
+          <div id="decisionFeedback" class="feedback"></div>
+          <div id="spokenCall" class="spoken-call"></div>
+          <button id="nextScenario" class="scenario-next">Next Scenario / 下一情境 →</button>
+          <div id="scenarioCompletionLine" class="scenario-completion-line">Complete all 3 scenarios to finish this step. / 完成 3 个情境后，本阶段才算完成。</div>
+        </div>
+
+        <div class="card">
+          <h3>Why multiple scenarios?</h3>
+          <div class="callout"><strong>The rule stays stable while the situation changes.</strong> This checks whether the learner can transfer the mapping instead of remembering one example.</div>
+          <p class="mini">English still carries the rule explanation. Chinese remains limited to the four useful table calls: 吃, 碰, 杠, 和.</p>
+        </div>
+      </div>
+
+      <div id="stageComplete3" class="stage-complete">
+        <div class="stage-complete-title">✓ Decide complete</div>
+        <div class="stage-complete-copy">You correctly completed three simplified Mahjong decision scenarios.</div>
+        <div class="stage-complete-cn">你已经正确完成了 3 个简化麻将牌局情境判断。</div>
+        <div class="stage-actions">
+          <button id="stage3Review" class="stage-action">Review Scenarios / 重新练习</button>
+          <button id="stage3Continue" class="stage-action continue">Continue → Quick Challenge</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 4 -->
+    <section id="challenge" class="panel">
+      <div class="section-head">
+        <div>
+          <h2>Quick Challenge</h2><div class="zh-title">低提示快速挑战</div>
+          <p class="lead">Support is reduced. Complete two listening rounds, two visual-pattern rounds, and one short Draw → Evaluate → Discard mini-turn.</p>
+        </div>
+        <div class="goal-tag"><strong>Learning goal / 学习目标</strong>Check whether the learner can hear, recognize, and act on the learned mappings with less support.</div>
+      </div>
+
+      <div class="challenge-grid">
+        <div class="audio-challenge">
+          <div class="challenge-card-head">
+            <div class="challenge-prompt">Challenge A — What did you hear?</div>
+            <div class="challenge-round">Round <span id="audioRoundNum">1</span> of 2</div>
+          </div>
+          <button class="big-audio" data-random-audio>🔊 Play a table call</button>
+          <div id="audioChoices" class="answers" style="margin-top:12px">
+            <button class="choice audio-answer" data-call="吃">Chow → Chi / 吃</button>
+            <button class="choice audio-answer" data-call="碰">Pung / 碰</button>
+            <button class="choice audio-answer" data-call="杠">Kong / 杠</button>
+            <button class="choice audio-answer" data-call="和">Hu / 和</button>
+          </div>
+          <div id="audioFeedback" class="feedback"></div>
+          <button id="nextAudioRound" class="challenge-next">Next Audio Round / 下一听力题 →</button>
+          <div id="audioMiniProgress" class="challenge-mini-progress">0/2 completed</div>
+        </div>
+
+        <div class="audio-challenge">
+          <div class="challenge-card-head">
+            <div class="challenge-prompt">Challenge B — Identify the pattern</div>
+            <div class="challenge-round">Round <span id="patternRoundNum">1</span> of 2</div>
+          </div>
+          <div id="finalPatternHand" class="mini-hand" style="justify-content:flex-start;margin-bottom:10px"></div>
+          <p class="mini">No English rule cue this time. / 这一次不再给英文规则提示。</p>
+          <div class="answers">
+            <button class="choice pattern-final" data-answer="pung">碰</button>
+            <button class="choice pattern-final" data-answer="chow">吃</button>
+            <button class="choice pattern-final" data-answer="kong">杠</button>
+            <button class="choice pattern-final" data-answer="hu">和</button>
+          </div>
+          <div id="finalFeedback" class="feedback"></div>
+          <button id="nextPatternRound" class="challenge-next">Next Pattern Round / 下一牌型题 →</button>
+          <div id="patternMiniProgress" class="challenge-mini-progress">0/2 completed</div>
+        </div>
+      </div>
+
+
+      <div class="act-challenge" id="actChallenge">
+        <div id="dragHandCue" class="drag-hand-cue" aria-hidden="true">🖐️</div>
+        <div class="act-head">
+          <div>
+            <div class="act-title">Challenge C — Act: Draw → Evaluate → Discard</div>
+            <div class="act-sub">A short mini-turn using a <strong>simplified practice hand</strong>. Draw a tile, physically organize it, evaluate the change, then drag a tile out of the hand to discard. The goal is procedural decision-making, not full-hand strategy or scoring.</div>
+          </div>
+          <div class="act-badge"><span id="miniTurnBadge">Mini-Turn 1 of 2 / 微型回合 1/2</span></div>
+        </div>
+
+        <div class="mini-turn-roundbar">
+          <div><strong id="miniTurnRoundTitle">Mini-Turn 1 — Complete a Sequence</strong><div class="mini" id="miniTurnRoundTitleCn">微型回合 1 — 摸牌补成顺子</div></div>
+          <div id="miniTurnRoundProgress" class="mini-turn-round-progress">0/2 completed</div>
+        </div>
+
+        <div class="turn-strip">
+          <div class="turn-step active" id="turnStepDraw"><span class="turn-num">1</span><span>Draw / 摸牌</span></div>
+          <div class="turn-step" id="turnStepEvaluate"><span class="turn-num">2</span><span>Evaluate / 判断</span></div>
+          <div class="turn-step" id="turnStepDiscard"><span class="turn-num">3</span><span>Discard / 出牌</span></div>
+        </div>
+
+        <div class="practice-hand-label">Simplified practice hand / 简化练习手牌</div>
+        <div id="miniTurnHand" class="practice-hand" aria-live="polite"></div>
+
+        <div id="organizeInstruction" class="organize-instruction">
+          <strong>Organize the draw / 整理摸到的牌</strong>
+          <span class="organize-status">Drag / 拖动</span><br/>
+          Drag the newly drawn tile into the hand where it belongs. Release it beside the tiles that make the most useful visible pattern.
+          / 将刚摸到的牌拖进手牌中合适的位置，并在能形成最明显有用牌型的位置松开。
+        </div>
+
+        <div class="turn-action-area">
+          <button id="drawPracticeTile" class="turn-primary">Draw a Tile / 摸一张牌</button>
+          <span id="wallCue" class="wall-cue" aria-hidden="true">
+            <span class="wall-stack"><span class="wall-tile"></span><span class="wall-tile"></span><span class="wall-tile"></span></span>
+            Wall / 牌墙
+          </span>
+
+          <div id="evaluateArea" class="turn-eval">
+            <div class="challenge-prompt">What changed after the draw? / 摸牌后发生了什么？</div>
+            <div class="answers" style="margin-top:9px">
+              <button class="choice mini-eval" data-eval="sequence">It completes a sequence / 补成顺子</button>
+              <button class="choice mini-eval" data-eval="triplet">It creates an identical-tile set / 组成相同牌组</button>
+              <button class="choice mini-eval" data-eval="none">It does not help the visible patterns / 对现有牌型无帮助</button>
+            </div>
+          </div>
+
+          <div id="miniTurnFeedback" class="turn-feedback"></div>
+          <div id="discardInstruction" class="turn-next-instruction">
+            <strong>Now discard one tile.</strong> Keep the useful pair and developing sequences; choose the clearly isolated tile. /
+            <strong>现在出一张牌。</strong> 保留有用的对子和连续牌，选择明显孤立的牌。
+          </div>
+          <div id="discardDragNote" class="discard-drag-note">
+            <strong>Drag to discard / 拖动出牌：</strong>
+            Grab one tile and drag it <strong>outside the dashed hand area</strong>, then release.
+            / 抓住一张牌，将它<strong>拖出虚线手牌区域</strong>后松开，即视为出牌。
+          </div>
+
+          <div id="actComplete" class="act-complete">✓ Mini-turn complete. You drew, evaluated, and discarded using the learned visual rules. / 微型回合完成：你已经完成摸牌、判断和出牌。</div>
+          <button id="nextMiniTurn" class="next-mini-turn">Next Mini-Turn / 下一回合 →</button>
+          <button id="resetMiniTurn" class="turn-reset">Practice Both Mini-Turns Again / 两个回合再练一次</button>
+        </div>
+      </div>
+
+      <div id="completeBox" class="done"><strong>Quick Challenge complete / 快速挑战完成。</strong><br/>You successfully completed 2 listening rounds, 2 visual-pattern rounds, and 2 Draw → Evaluate → Discard mini-turns.</div>
+
+      <div id="stageComplete4" class="stage-complete">
+        <div class="stage-complete-title">✓ Foundation Path Complete</div>
+        <div class="stage-complete-copy">You completed the beginner path from visual recognition to reduced-support action across two practice mini-turns.</div>
+        <div class="stage-complete-cn">你已经完成从视觉识别到两个低提示微型回合操作的基础学习路径。</div>
+        <div class="stage-actions">
+          <button id="stage4Practice" class="stage-action">Practice Quick Challenge Again / 再练快速挑战</button>
+          <button id="stage4Review" class="stage-action continue">Choose Any Activity / 自由练习</button>
+        </div>
+        <div class="path-complete-note">Completion here means you completed the core checkpoints in each stage; it does not represent full Mahjong mastery.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Rule reference:</strong> core action terminology and beginner-level definitions are checked against the student-provided MCR English and Chinese editions. Where terminology differs, the Chinese MCR wording is used for the Chinese label (for example, 和 / Hu).<br/>
+    <strong>Audio & speaking practice:</strong> model pronunciation uses the browser/device Mandarin speech-synthesis voice when available. Learners may record and replay their own voice for self-comparison; the learning experience does not upload audio or assign a pronunciation score.<br/>
+    <strong>Scope:</strong> advanced scoring, regional variants, full-game timing, and complete competition procedures remain outside this beginner learning path.
+  </footer>
+</div>
+
+
+<script>
+  // V0.6.9 final consistency pass: learner-facing wording, terminology, and interaction behavior reviewed.
+(() => {
+  const onboarding = document.getElementById('v06Onboarding');
+  const hookScreen = document.getElementById('v06HookScreen');
+  const orientation = document.getElementById('v06Orientation');
+  const mainExperience = document.getElementById('v06MainExperience');
+  const feedback = document.getElementById('v06HookFeedback');
+  const actions = document.getElementById('v06HookActions');
+  const choices = [...document.querySelectorAll('.onb-tile-choice')];
+
+  function resetHook(){
+    choices.forEach(c => c.classList.remove('onb-correct','onb-wrong'));
+    feedback.className = 'onb-feedback';
+    feedback.innerHTML = '';
+    actions.style.display = 'none';
+  }
+
+  choices.forEach(choice => {
+    choice.addEventListener('click', () => {
+      choices.forEach(c => c.classList.remove('onb-correct','onb-wrong'));
+      const correct = choice.dataset.onbValue === '5';
+      choice.classList.add(correct ? 'onb-correct' : 'onb-wrong');
+      feedback.className = 'onb-feedback onb-show ' + (correct ? 'onb-good' : 'onb-bad');
+
+      if(correct){
+        feedback.innerHTML = `
+          <div class="onb-big">Exactly — you already discovered your first Mahjong decoding rule.</div>
+          <strong>Five circles = 5 Dots.</strong>
+          <div>You just decoded a Mahjong tile without knowing Chinese.</div>
+          <div class="onb-cn">五个圆圈 = 五筒。你已经在不懂中文的情况下读懂了一张麻将牌。</div>
+        `;
+        actions.style.display = 'flex';
+      }else{
+        feedback.innerHTML = `
+          <div class="onb-big">Not quite — but you already have the right tool.</div>
+          <div>Try counting the circles on each tile.</div>
+          <div class="onb-cn">再试一次：数一数每张牌上的圆圈。</div>
+        `;
+        actions.style.display = 'none';
+      }
+    });
+  });
+
+  document.getElementById('v06ShowOrientation').addEventListener('click', () => {
+    hookScreen.style.display = 'none';
+    orientation.classList.add('onb-show');
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+
+  document.getElementById('v06TryHookAgain').addEventListener('click', resetHook);
+
+  document.getElementById('v06StartLearning').addEventListener('click', () => {
+    onboarding.style.display = 'none';
+    mainExperience.style.display = 'block';
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+})();
+</script>
+
+<script>
+
+  // -----------------------------
+  // V0.6.1: global progress / next-step layer
+  // Progress is session-only and does not gate navigation.
+  // -----------------------------
+  const progressState={completed:[false,false,false,false],current:1};
+  const stageTargets={1:'learn',2:'patterns',3:'decide',4:'challenge'};
+
+  const module1Progress={
+    dots:false,
+    bamboo:false,
+    characters:false,
+    honors:false,
+    mixed:false
+  };
+  const module2Progress={
+    chowTry:false,
+    chowBuild:false,
+    pung:false,
+    kong:false,
+    hu:false
+  };
+
+  function renderModule1Progress(){
+    document.querySelectorAll('[data-m1-part]').forEach(item=>{
+      const key=item.dataset.m1Part;
+      const done=Boolean(module1Progress[key]);
+      const dot=item.querySelector('.subprog-dot');
+      item.classList.toggle('complete',done);
+      if(dot) dot.textContent=done?'✓':item.dataset.subIndex;
+    });
+
+    ['dots','bamboo','characters','honors'].forEach(key=>{
+      const tab=document.querySelector(`.decode-tab[data-decode="${key}"]`);
+      if(tab) tab.classList.toggle('sub-complete',Boolean(module1Progress[key]));
+    });
+
+    const allDone=Object.values(module1Progress).every(Boolean);
+    if(allDone) completeStage(1);
+  }
+
+  function markModule1Progress(key){
+    if(key in module1Progress) module1Progress[key]=true;
+    renderModule1Progress();
+  }
+
+  function module2PartDone(key){
+    if(key==='chow') return module2Progress.chowTry && module2Progress.chowBuild;
+    return Boolean(module2Progress[key]);
+  }
+
+  function renderModule2Progress(){
+    document.querySelectorAll('[data-m2-part]').forEach(item=>{
+      const key=item.dataset.m2Part;
+      const done=module2PartDone(key);
+      const dot=item.querySelector('.subprog-dot');
+      item.classList.toggle('complete',done);
+      item.classList.remove('partial');
+
+      if(key==='chow' && !done && (module2Progress.chowTry || module2Progress.chowBuild)){
+        item.classList.add('partial');
+        if(dot) dot.textContent='1/2';
+      }else if(dot){
+        dot.textContent=done?'✓':item.dataset.subIndex;
+      }
+    });
+
+    ['chow','pung','kong','hu'].forEach(key=>{
+      const tab=document.querySelector(`.lesson-tab[data-lesson="${key}"]`);
+      if(tab) tab.classList.toggle('sub-complete',module2PartDone(key));
+    });
+
+    const allDone=['chow','pung','kong','hu'].every(module2PartDone);
+    if(allDone) completeStage(2);
+  }
+
+  function markModule2Progress(key){
+    if(key in module2Progress) module2Progress[key]=true;
+    renderModule2Progress();
+  }
+
+  let foundationCelebrationPlayed=false;
+
+  function buildConfetti(){
+    const layer=document.getElementById('confettiLayer');
+    if(!layer) return;
+    layer.innerHTML='';
+    const colors=['#B3A369','#003057','#2f7d59','#d45b5b','#4f72c9','#f0b84d'];
+    for(let i=0;i<34;i++){
+      const piece=document.createElement('span');
+      piece.className='confetti-piece';
+      piece.style.left=`${2+Math.random()*96}%`;
+      piece.style.background=colors[i%colors.length];
+      piece.style.setProperty('--delay',`${Math.random()*.38}s`);
+      piece.style.setProperty('--fall',`${1.45+Math.random()*.75}s`);
+      piece.style.setProperty('--drift',`${-70+Math.random()*140}px`);
+      piece.style.setProperty('--spin',`${360+Math.random()*720}deg`);
+      piece.style.transform=`rotate(${Math.random()*180}deg)`;
+      layer.appendChild(piece);
+    }
+  }
+
+  function hideFoundationCelebration(){
+    const overlay=document.getElementById('foundationCelebration');
+    if(!overlay) return;
+    overlay.classList.remove('show');
+    const layer=document.getElementById('confettiLayer');
+    if(layer) layer.innerHTML='';
+    const finalCard=document.getElementById('stageComplete4');
+    if(finalCard) finalCard.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  function showFoundationCelebration(){
+    if(foundationCelebrationPlayed) return;
+    foundationCelebrationPlayed=true;
+    const overlay=document.getElementById('foundationCelebration');
+    if(!overlay) return;
+    buildConfetti();
+    overlay.classList.add('show');
+    requestAnimationFrame(()=>{
+      document.getElementById('foundationCelebrationDone')?.focus();
+    });
+  }
+
+  document.getElementById('foundationCelebrationDone')?.addEventListener('click',hideFoundationCelebration);
+
+  function maybeCompleteFoundationPath(){
+    const allDone=progressState.completed.every(Boolean);
+    const finalCard=document.getElementById('stageComplete4');
+    if(finalCard) finalCard.classList.toggle('show',allDone);
+    if(allDone) showFoundationCelebration();
+  }
+
+  function renderProgress(){
+    document.querySelectorAll('[data-prog-stage]').forEach(item=>{
+      const n=Number(item.dataset.progStage);
+      const dot=item.querySelector('.prog-dot');
+      item.classList.toggle('complete',progressState.completed[n-1]);
+      item.classList.toggle('current',progressState.current===n && !progressState.completed[n-1]);
+      dot.textContent=progressState.completed[n-1]?'✓':String(n);
+    });
+  }
+
+  function setCurrentStage(n){
+    progressState.current=n;
+    renderProgress();
+  }
+
+  function completeStage(n){
+    if(!progressState.completed[n-1]){
+      progressState.completed[n-1]=true;
+    }
+    const card=document.getElementById(`stageComplete${n}`);
+    if(card && n!==4) card.classList.add('show');
+    renderProgress();
+    maybeCompleteFoundationPath();
+  }
+
+  function goToStage(n){
+    const target=stageTargets[n];
+    const btn=[...document.querySelectorAll('.module-nav .step')].find(x=>x.dataset.target===target);
+    if(btn) btn.click();
+  }
+
+  function scrollToElement(el){
+    if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+
+  // -----------------------------
+  // Navigation
+  // -----------------------------
+  const steps=[...document.querySelectorAll('.step')];
+  steps.forEach(s=>s.addEventListener('click',()=>{
+    steps.forEach(x=>x.classList.toggle('active',x===s));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===s.dataset.target));
+    const map={learn:1,patterns:2,decide:3,challenge:4};
+    if(map[s.dataset.target]) setCurrentStage(map[s.dataset.target]);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+  renderProgress();
+  renderModule1Progress();
+  renderModule2Progress();
+
+  // -----------------------------
+  // Mandarin speech synthesis
+  // -----------------------------
+  const speechProxy={'和':'胡'}; // display MCR-standard 和; use homophone 胡 only to force the Mahjong reading hú in generic TTS.
+  function speakChinese(text){
+    if(!('speechSynthesis' in window)){
+      alert('Speech synthesis is not available in this browser. / 当前浏览器不支持语音播放。');
+      return;
+    }
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(speechProxy[text] || text);
+    u.lang='zh-CN';u.rate=.72;u.pitch=1;
+    const voices=speechSynthesis.getVoices();
+    const zh=voices.find(v=>/^zh(-|_)/i.test(v.lang));
+    if(zh)u.voice=zh;
+    speechSynthesis.speak(u);
+  }
+  document.addEventListener('click',e=>{
+    const b=e.target.closest('.listen');
+    if(b)speakChinese(b.dataset.say);
+  });
+
+  // -----------------------------
+  // Module 1: decode-first learning sequence
+  // Learners first receive a visual strategy for each family, then complete mixed practice.
+  // -----------------------------
+  const decodeTabs=[...document.querySelectorAll('.decode-tab')];
+  decodeTabs.forEach(tab=>tab.addEventListener('click',()=>{
+    decodeTabs.forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.decode-lesson').forEach(l=>l.classList.toggle('active',l.id===`decode-${tab.dataset.decode}`));
+  }));
+
+  // Quick checks deliberately remain answerable after an incorrect attempt.
+  // Wrong choice = diagnostic feedback only; learner can immediately try another option.
+  document.querySelectorAll('.mini-check').forEach(box=>{
+    const fb=box.querySelector('.mini-feedback');
+    const miniType=box.dataset.mini;
+    const support={
+      dots:{
+        good:['Correct. Count the circles: this is 7 Dots.','正确。数圆圈可知这是七筒。'],
+        bad:['Not quite. Ignore the colours and count the circles on the tile, then try again.','还不对。先忽略颜色，数一数牌面上的圆圈数量，再试一次。']
+      },
+      bamboo:{
+        good:['Correct. 1 Bamboo is the distinctive bird-like tile.','正确。一条是具有明显鸟形图案的特殊牌面。'],
+        bad:['Not quite. Look for the repeated bamboo-like marks; remember that 1 Bamboo is the special bird-like exception.','还不对。观察重复的条形图案；同时记住一条是特殊的鸟形牌面。']
+      },
+      characters:{
+        good:['Correct. The upper numeral is 三 (3), and the lower marker identifies the Character suit.','正确。上方是“三”，下方的万字标志说明这是三万。'],
+        bad:['Not quite. Read the tile in two parts: the numeral gives the value, and 万 identifies the Character suit.','还不对。把牌面分成两部分看：上方数字表示点数，下方“万”表示万字牌。']
+      },
+      honors:{
+        good:['Correct. 中 is the Red Dragon. Honor tiles are learned through direct symbol–meaning association.','正确。“中”对应红中。字牌主要通过符号与含义直接对应来识别。'],
+        bad:['Not quite. Honor tiles are not counted like numbered suits. Match the symbol directly to its meaning, then try again.','还不对。字牌不能像数字牌一样数图案；请把符号与含义直接对应后再试一次。']
+      }
+    };
+
+    box.querySelectorAll('.mini-answer').forEach(btn=>btn.addEventListener('click',()=>{
+      const ok=btn.dataset.correct==='true';
+
+      // Never disable the alternatives. Clear prior visual state so another answer can be tried.
+      box.querySelectorAll('.mini-answer').forEach(b=>b.classList.remove('wrong-choice','correct-choice'));
+      btn.classList.add(ok?'correct-choice':'wrong-choice');
+
+      fb.className='feedback '+(ok?'good':'bad');
+      const msg=ok?support[miniType].good:support[miniType].bad;
+      fb.innerHTML=`${msg[0]}<span class="zhfb">${msg[1]}</span>`;
+      if(ok) markModule1Progress(miniType);
+    }));
+  });
+
+  const quiz=[
+    {g:'🀙',en:'1 Dot',cn:'一筒',correct:'Dots',ex:'Correct. Count the single circle: this is a Dot tile.',zh:'正确。一个圆圈对应一筒，属于筒子。'},
+    {g:'🀞',en:'6 Dots',cn:'六筒',correct:'Dots',ex:'Correct. Count six circles: this is 6 Dots.',zh:'正确。六个圆圈表示六筒。'},
+    {g:'🀗',en:'8 Bamboo',cn:'八条',correct:'Bamboo',ex:'Correct. The repeated bamboo-like marks identify this as a Bamboo tile.',zh:'正确。重复的条形图案说明这是一张条子牌。'},
+    {g:'🀐',en:'1 Bamboo',cn:'一条',correct:'Bamboo',ex:'Correct. This is the special bird-like 1 Bamboo.',zh:'正确。这是一条的特殊鸟形牌面。'},
+    {g:'🀉',en:'3 Characters',cn:'三万',correct:'Characters',ex:'Correct. 三 gives the value 3 and 万 marks the Character suit.',zh:'正确。上方“三”表示数字3，下方“万”表示万字牌。'},
+    {g:'🀍',en:'7 Characters',cn:'七万',correct:'Characters',ex:'Correct. 七 gives the value 7 and 万 marks the suit.',zh:'正确。七 + 万表示七万。'},
+    {g:'🀄',en:'Red Dragon',cn:'中',correct:'Honor',ex:'Correct. Red Dragon is an Honor tile recognized by direct symbol–meaning association.',zh:'正确。红中属于字牌，需要通过符号与含义直接对应来识别。'},
+    {g:'🀀',en:'East Wind',cn:'东',correct:'Honor',ex:'Correct. East is a Wind tile, one of the Honors.',zh:'正确。东风属于字牌。'}
+  ];
+  const opts=[['Characters','万 / Characters'],['Bamboo','条 / Bamboo'],['Dots','饼/筒 / Dots'],['Honor','字牌 / Honor']];
+
+  let mixedSet=[];
+  let mixedIndex=0;
+  let mixedCorrect=0;
+  let mixedItemSolved=false;
+
+  const quizGlyph=document.getElementById('quizGlyph');
+  const quizCaptionEn=document.getElementById('quizCaptionEn');
+  const quizCaptionCn=document.getElementById('quizCaptionCn');
+  const quizAnswers=document.getElementById('quizAnswers');
+  const quizFeedback=document.getElementById('quizFeedback');
+  const nextQuiz=document.getElementById('nextQuiz');
+  const quizWrap=quizGlyph.closest('.tile-wrap');
+
+  function shuffled(arr){
+    const copy=[...arr];
+    for(let i=copy.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [copy[i],copy[j]]=[copy[j],copy[i]];
+    }
+    return copy;
+  }
+
+  function mixedRetryCue(family){
+    const cues={
+      Dots:[
+        'Not quite. Look for a countable circle pattern, then try again.',
+        '还不对。看看牌面是否有可以直接数的圆圈图案，再试一次。'
+      ],
+      Bamboo:[
+        'Not quite. Look for repeated bamboo-like marks or the special bird-like 1 Bamboo.',
+        '还不对。观察重复的条形图案，或一条的特殊鸟形牌面。'
+      ],
+      Characters:[
+        'Not quite. Look for a Chinese numeral paired with the 万 suit marker.',
+        '还不对。看看是否是中文数字与“万”字花色标记组合。'
+      ],
+      Honor:[
+        'Not quite. This family relies on direct symbol–meaning recognition rather than counting.',
+        '还不对。这一类主要依靠符号与含义直接对应，而不是数图案。'
+      ]
+    };
+    return cues[family];
+  }
+
+  function buildMixedSet(){
+    const families=shuffled(['Dots','Bamboo','Characters','Honor']).slice(0,3);
+    return families.map(f=>{
+      const pool=quiz.filter(q=>q.correct===f);
+      return pool[Math.floor(Math.random()*pool.length)];
+    });
+  }
+
+  function startMixedSet(){
+    mixedSet=buildMixedSet();
+    mixedIndex=0;
+    mixedCorrect=0;
+    mixedItemSolved=false;
+    renderQuiz();
+  }
+
+  function renderQuiz(){
+    const q=mixedSet[mixedIndex];
+    document.getElementById('qnum').textContent=mixedIndex+1;
+    quizGlyph.textContent=q.g;
+    quizCaptionEn.textContent=q.en;
+    quizCaptionCn.textContent=q.cn;
+    quizWrap.classList.add('no-caption');
+    quizFeedback.className='feedback';
+    quizFeedback.innerHTML='';
+    nextQuiz.style.display='none';
+    quizAnswers.innerHTML='';
+    mixedItemSolved=false;
+
+    opts.forEach(([key,label])=>{
+      const b=document.createElement('button');
+      b.className='choice';
+      b.textContent=label;
+      b.onclick=()=>{
+        const ok=key===q.correct;
+        quizFeedback.className='feedback '+(ok?'good':'bad');
+        const retryCue=mixedRetryCue(q.correct);
+        quizFeedback.innerHTML=(ok?q.ex:retryCue[0])+
+          `<span class="zhfb">${ok?q.zh:retryCue[1]}</span>`;
+
+        if(ok && !mixedItemSolved){
+          mixedItemSolved=true;
+          mixedCorrect++;
+          quizWrap.classList.remove('no-caption');
+
+          if(mixedCorrect>=3){
+            markModule1Progress('mixed');
+            quizFeedback.innerHTML += '<span class="zhfb"><strong>3/3 complete. Mixed Recognition finished.</strong><br/>3/3 完成。混合识别练习已完成。</span>';
+            nextQuiz.style.display='none';
+          }else{
+            nextQuiz.style.display='inline-block';
+          }
+        }
+      };
+      quizAnswers.appendChild(b);
+    });
+  }
+
+  nextQuiz.onclick=()=>{
+    if(!mixedItemSolved) return;
+    if(mixedIndex<mixedSet.length-1){
+      mixedIndex++;
+      renderQuiz();
+    }
+  };
+
+  startMixedSet();
+
+  // -----------------------------
+  // Module 2: pattern-call association
+  // -----------------------------
+  const lessonTabs=[...document.querySelectorAll('.lesson-tab')];
+  lessonTabs.forEach(tab=>tab.addEventListener('click',()=>{
+    lessonTabs.forEach(t=>t.classList.toggle('active',t===tab));
+    document.querySelectorAll('.micro-lesson').forEach(l=>l.classList.toggle('active',l.id===`lesson-${tab.dataset.lesson}`));
+    updateSpeakTarget(tab.dataset.lesson);
+  }));
+
+
+  // Table-call pronunciation self-practice: model -> record -> replay -> self-compare.
+  // No audio is uploaded and no automated pronunciation score is produced.
+  const speakTargets={
+    chow:{word:'吃',pin:'chī',en:'Chi · claim a Chow'},
+    pung:{word:'碰',pin:'pèng',en:'Pung · claim a triplet'},
+    kong:{word:'杠',pin:'gàng',en:'Kong · declare a Kong'},
+    hu:{word:'和',pin:'hú',en:'Hu · declare Mahjong / win'}
+  };
+  let currentSpeakKey='chow';
+  let micStream=null, mediaRecorder=null, recordedChunks=[], recordedUrl=null, recordTimer=null;
+  const speakTargetWord=document.getElementById('speakTargetWord');
+  const speakTargetPin=document.getElementById('speakTargetPin');
+  const speakTargetEn=document.getElementById('speakTargetEn');
+  const hearPracticeTarget=document.getElementById('hearPracticeTarget');
+  const startRecordingBtn=document.getElementById('startRecording');
+  const stopRecordingBtn=document.getElementById('stopRecording');
+  const playRecordingBtn=document.getElementById('playRecording');
+  const recordAgainBtn=document.getElementById('recordAgain');
+  const recordStatus=document.getElementById('recordStatus');
+  const userRecording=document.getElementById('userRecording');
+
+  function resetRecordedAudio(){
+    if(recordedUrl){URL.revokeObjectURL(recordedUrl);recordedUrl=null;}
+    userRecording.removeAttribute('src');userRecording.load();
+    playRecordingBtn.disabled=true;recordAgainBtn.disabled=true;
+  }
+  function updateSpeakTarget(key){
+    currentSpeakKey=key in speakTargets?key:'chow';
+    const t=speakTargets[currentSpeakKey];
+    speakTargetWord.textContent=t.word;speakTargetPin.textContent=t.pin;speakTargetEn.textContent=t.en;
+    if(mediaRecorder && mediaRecorder.state==='recording') mediaRecorder.stop();
+    resetRecordedAudio();
+    recordStatus.textContent='Listen to the model, then record and replay your own call. / 先听示范，再录音并回放自己的口令。';
+  }
+  hearPracticeTarget.addEventListener('click',()=>speakChinese(speakTargets[currentSpeakKey].word));
+
+  async function startSelfRecording(){
+    if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){
+      recordStatus.textContent='Microphone recording is unavailable in this browser/context. Try current Chrome/Edge over HTTPS or localhost. / 当前浏览器或运行环境不支持麦克风录音。';
+      return;
+    }
+    try{
+      resetRecordedAudio();
+      micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      recordedChunks=[];
+      mediaRecorder=new MediaRecorder(micStream);
+      mediaRecorder.addEventListener('dataavailable',e=>{if(e.data.size)recordedChunks.push(e.data)});
+      mediaRecorder.addEventListener('stop',()=>{
+        clearTimeout(recordTimer);
+        const type=mediaRecorder.mimeType || 'audio/webm';
+        const blob=new Blob(recordedChunks,{type});
+        recordedUrl=URL.createObjectURL(blob);userRecording.src=recordedUrl;
+        playRecordingBtn.disabled=false;recordAgainBtn.disabled=false;
+        startRecordingBtn.disabled=false;stopRecordingBtn.disabled=true;
+        if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+        recordStatus.textContent='Recorded. Play your voice and compare it with the model; record again if needed. / 已录音。请回放并与示范对比，需要时可重录。';
+      });
+      mediaRecorder.start();
+      startRecordingBtn.disabled=true;stopRecordingBtn.disabled=false;recordAgainBtn.disabled=true;
+      recordStatus.textContent='Recording… say the table call now. Auto-stop in 4 seconds. / 正在录音……现在说出口令，4秒后自动停止。';
+      recordTimer=setTimeout(()=>{if(mediaRecorder?.state==='recording')mediaRecorder.stop()},4000);
+    }catch(err){
+      if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+      startRecordingBtn.disabled=false;stopRecordingBtn.disabled=true;
+      recordStatus.textContent='Microphone permission was not granted or recording could not start. You can continue using the listening activities. / 未获得麦克风权限或无法开始录音；仍可继续使用听音练习。';
+    }
+  }
+  startRecordingBtn.addEventListener('click',startSelfRecording);
+  stopRecordingBtn.addEventListener('click',()=>{if(mediaRecorder?.state==='recording')mediaRecorder.stop()});
+  playRecordingBtn.addEventListener('click',()=>{if(userRecording.src){userRecording.currentTime=0;userRecording.play()}});
+  recordAgainBtn.addEventListener('click',startSelfRecording);
+  updateSpeakTarget('chow');
+
+  // Module 2 Try-it behavior: explicit feedback targets keep visual state and feedback synchronized.
+  // Each option points to a unique feedback element for its lesson.
+  function updatePatternTry(chosen){
+    const feedbackId=chosen.dataset.feedback;
+    const fb=document.getElementById(feedbackId);
+    const grid=chosen.closest('.try-grid');
+    const ok=chosen.dataset.correct==='true';
+    if(!fb || !grid) return;
+
+    grid.querySelectorAll('.pattern-check').forEach(option=>{
+      option.disabled=false;
+      option.classList.remove('wrong-choice','correct-choice');
+      option.setAttribute('aria-pressed','false');
+    });
+
+    chosen.classList.add(ok?'correct-choice':'wrong-choice');
+    chosen.setAttribute('aria-pressed','true');
+
+    fb.classList.remove('good','bad');
+    fb.classList.add(ok?'good':'bad');
+
+    const feedbackByLesson={
+      'feedback-chow':{
+        good:['Correct. Three consecutive tiles from the same numbered suit form a Chow; the table call is 吃 / Chi.','正确。同一数字花色的三张连续牌组成顺子，牌桌口令是“吃”。'],
+        bad:['Not quite. Check two things: are the values consecutive, and are all three tiles from the same numbered suit?','还不对。检查两点：数字是否连续？三张牌是否属于同一个数字花色？']
+      },
+      'feedback-pung':{
+        good:['Correct. Three identical tiles form a Pung; the table call is 碰 / Pung.','正确。三张完全相同的牌组成刻子，牌桌口令是“碰”。'],
+        bad:['Not quite. Count how many tiles are identical. A Pung depends on sameness, not a number sequence.','还不对。数一数有几张完全相同的牌；“碰”看的是相同牌，而不是数字连续。']
+      },
+      'feedback-kong':{
+        good:['Correct. Four identical tiles form a Kong; the table call is 杠 / Kong.','正确。四张完全相同的牌组成杠，牌桌口令是“杠”。'],
+        bad:['Not quite. First check whether all tiles are identical, then count whether there are three or four.','还不对。先确认牌面是否完全相同，再数一数到底是三张还是四张。']
+      },
+      'feedback-hu':{
+        good:['Correct. 和 / Hu is the declaration used when you complete a winning hand.','正确。“和 / Hu”是在完成胡牌时使用的牌桌口令。'],
+        bad:['Not quite. This prompt asks for the declaration used when the hand is complete and wins, not for claiming a Chow, Pung, or Kong.','还不对。本题问的是整副牌完成并获胜时使用的口令，而不是吃、碰或杠。']
+      }
+    };
+
+    const lessonMsg=feedbackByLesson[feedbackId];
+    const msg=ok?lessonMsg.good:lessonMsg.bad;
+    fb.innerHTML=`${msg[0]}<span class="zhfb">${msg[1]}</span>`;
+
+    if(ok){
+      const checkpointMap={
+        'feedback-chow':'chowTry',
+        'feedback-pung':'pung',
+        'feedback-kong':'kong',
+        'feedback-hu':'hu'
+      };
+      const checkpoint=checkpointMap[feedbackId];
+      if(checkpoint) markModule2Progress(checkpoint);
+    }
+  }
+
+  document.querySelectorAll('.pattern-check').forEach(btn=>{
+    btn.addEventListener('click',()=>updatePatternTry(btn));
+  });
+
+  // -----------------------------
+  // Module 2b: curated Chow construction bank
+  // Reset = retry the same representation; Next Example = same rule, new surface features.
+  // -----------------------------
+  const dragTasks=[
+    {
+      name:'1–2–3 Characters / 一二三万',
+      tiles:[['c1','🀇'],['c2','🀈'],['c3','🀉'],['c5','🀋'],['b5','🀔']],
+      need:['c1','c2','c3'],
+      en:'1–2–3 Characters form a Chow.',
+      zh:'一万、二万、三万组成顺子。'
+    },
+    {
+      name:'2–3–4 Bamboo / 二三四条',
+      tiles:[['b2','🀑'],['b3','🀒'],['b4','🀓'],['b5','🀔'],['east','🀀']],
+      need:['b2','b3','b4'],
+      en:'2–3–4 Bamboo form a Chow.',
+      zh:'二条、三条、四条组成顺子。'
+    },
+    {
+      name:'5–6–7 Dots / 五六七筒',
+      tiles:[['d5','🀝'],['d6','🀞'],['d7','🀟'],['c7','🀍'],['north','🀃']],
+      need:['d5','d6','d7'],
+      en:'5–6–7 Dots form a Chow.',
+      zh:'五筒、六筒、七筒组成顺子。'
+    },
+    {
+      name:'2–3–4 Characters / 二三四万',
+      tiles:[['c2','🀈'],['c3','🀉'],['c4','🀊'],['d4','🀜'],['red','🀄']],
+      need:['c2','c3','c4'],
+      en:'2–3–4 Characters form a Chow.',
+      zh:'二万、三万、四万组成顺子。'
+    },
+    {
+      name:'5–6–7 Bamboo / 五六七条',
+      tiles:[['b5','🀔'],['b6','🀕'],['b7','🀖'],['d7','🀟'],['west','🀂']],
+      need:['b5','b6','b7'],
+      en:'5–6–7 Bamboo form a Chow.',
+      zh:'五条、六条、七条组成顺子。'
+    }
+  ];
+  const dragSource=document.getElementById('dragSource');
+  const dragZone=document.getElementById('dragZone');
+  const dragFeedback=document.getElementById('dragFeedback');
+  const nextDrag=document.getElementById('nextDrag');
+  let dragSelected=[];
+  let dragTaskIndex=0;
+
+  function makeDragTile(item,i){
+    const [code,glyph]=item;
+    const wrap=document.createElement('div');
+    wrap.className='tile draggable';wrap.draggable=true;wrap.dataset.code=code;wrap.dataset.uid=`${code}-${dragTaskIndex}-${i}`;
+    wrap.innerHTML=`<span class="glyph">${glyph}</span>`;
+    wrap.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',wrap.dataset.uid));
+    wrap.addEventListener('click',()=>moveToDragZone(wrap));
+    return wrap;
+  }
+  function renderDragTask(){
+    const task=dragTasks[dragTaskIndex];
+    dragSelected=[];dragSource.innerHTML='';dragZone.innerHTML='<span class="drop-hint">Drop/select three tiles here / 将三张牌放到这里</span>';
+    dragFeedback.className='feedback';dragFeedback.innerHTML='';nextDrag.classList.remove('show');
+    task.tiles.forEach((t,i)=>dragSource.appendChild(makeDragTile(t,i)));
+  }
+  function moveToDragZone(el){
+    if(dragSelected.includes(el.dataset.uid))return;
+    dragSelected.push(el.dataset.uid);
+    const hint=dragZone.querySelector('.drop-hint');if(hint)hint.remove();
+    dragZone.appendChild(el);
+  }
+  dragZone.addEventListener('dragover',e=>{e.preventDefault();dragZone.classList.add('over')});
+  dragZone.addEventListener('dragleave',()=>dragZone.classList.remove('over'));
+  dragZone.addEventListener('drop',e=>{
+    e.preventDefault();dragZone.classList.remove('over');
+    const uid=e.dataTransfer.getData('text/plain');
+    const el=[...document.querySelectorAll('.draggable')].find(x=>x.dataset.uid===uid);
+    if(el)moveToDragZone(el);
+  });
+  document.getElementById('resetDrag').addEventListener('click',renderDragTask);
+  nextDrag.addEventListener('click',()=>{
+    dragTaskIndex=(dragTaskIndex+1)%dragTasks.length;
+    renderDragTask();
+  });
+  document.getElementById('checkDrag').addEventListener('click',()=>{
+    const task=dragTasks[dragTaskIndex];
+    const codes=[...dragZone.querySelectorAll('.tile')].map(x=>x.dataset.code).sort();
+    const need=[...task.need].sort();
+    const ok=codes.length===need.length&&codes.every((x,i)=>x===need[i]);
+    dragFeedback.className='feedback '+(ok?'good':'bad');
+    dragFeedback.innerHTML=ok
+      ? `Correct. ${task.en} Now connect the pattern to the spoken call: <strong>吃 · chī</strong>.<span class="zhfb">正确。${task.zh} 现在把这个牌型与口令“吃”联系起来。</span>`
+      : 'Not quite. Check both the suit and the order: all three tiles must be from one numbered suit and their values must be consecutive.<span class="zhfb">还不对。请同时检查花色和顺序：三张牌必须属于同一个数字花色，而且数字必须连续。</span>';
+    if(ok){nextDrag.classList.add('show');markModule2Progress('chowBuild');}
+  });
+  renderDragTask();
+
+  // -----------------------------
+  // Module 3: three controlled decision scenarios
+  // -----------------------------
+  const decisionScenarios=[
+    {
+      title:'Can you claim this discard?',
+      text:'The player to your <strong>left</strong> discards <strong>3 Characters</strong>. You already hold 1 and 2 Characters.',
+      textCn:'你左手边的玩家打出三万。你手里已有一万、二万。',
+      your:['🀇','🀈'],
+      discard:'🀉',
+      discardLabel:"Left player's discard / 上家弃牌",
+      correct:'chow',
+      call:'吃',
+      callPinyin:'chī',
+      feedback:'Correct. Your 1 and 2 Characters combine with the left player\'s discarded 3 Characters to make a Chow. Call “吃 / Chi”.',
+      feedbackCn:'正确。你可以用手中的一万、二万，加上上家打出的三万组成顺子；应报“吃”。',
+      wrong:'Not quite. Compare the three tiles: are they identical, or consecutive in one numbered suit? Also check which player discarded the tile.',
+      wrongCn:'还不对。比较这三张牌：它们是完全相同，还是同一数字花色中的连续牌？同时注意是谁打出的这张牌。'
+    },
+    {
+      title:'Another player discards a tile matching your pair.',
+      text:'The player <strong>across from you</strong> discards <strong>5 Bamboo</strong>. You already hold two 5 Bamboo tiles.',
+      textCn:'你对面的玩家打出五条。你手里已有两张五条。',
+      your:['🀔','🀔'],
+      discard:'🀔',
+      discardLabel:"Another player's discard / 他人弃牌",
+      correct:'pung',
+      call:'碰',
+      callPinyin:'pèng',
+      feedback:'Correct. Three identical 5 Bamboo tiles form a Pung. Call “碰 / Pung”.',
+      feedbackCn:'正确。三张相同的五条组成刻子；应报“碰”。',
+      wrong:'Not quite. Count how many 5 Bamboo tiles you would have after adding the discard. Then recall which call matches three identical tiles.',
+      wrongCn:'还不对。把弃牌加入后数一数一共有几张五条，再回忆三张相同牌对应哪一种牌桌口令。'
+    },
+    {
+      title:'The pattern fits — but does the seat rule allow Chi?',
+      text:'The player to your <strong>right</strong> discards <strong>3 Characters</strong>. You already hold 1 and 2 Characters.',
+      textCn:'你右手边的玩家打出三万。你手里已有一万、二万。',
+      your:['🀇','🀈'],
+      discard:'🀉',
+      discardLabel:"Right player's discard / 下家弃牌",
+      correct:'pass',
+      call:'',
+      callPinyin:'',
+      feedback:'Correct. The tiles could form a Chow, but Chi may only claim the discard from the player to your left. Here, you must pass.',
+      feedbackCn:'正确。牌面虽然能组成顺子，但“吃”只能取上家的弃牌；这里必须放弃。',
+      wrong:'Not quite. Look at who discarded the tile. A Chow claim is restricted by seat direction.',
+      wrongCn:'还不对。请注意是谁打出的牌；顺子的“吃”受到座位方向限制。'
+    }
+  ];
+
+  let decisionScenarioIndex=0;
+  let decisionScenarioSolved=false;
+  let decisionScenarioCompleted=[false,false,false];
+
+  const scenarioNum=document.getElementById('scenarioNum');
+  const scenarioNumCn=document.getElementById('scenarioNumCn');
+  const scenarioTitle=document.getElementById('scenarioTitle');
+  const scenarioText=document.getElementById('scenarioText');
+  const scenarioTextCn=document.getElementById('scenarioTextCn');
+  const scenarioFormation=document.getElementById('scenarioFormation');
+  const decisionFeedback=document.getElementById('decisionFeedback');
+  const spokenCall=document.getElementById('spokenCall');
+  const nextScenario=document.getElementById('nextScenario');
+  const scenarioCompletionLine=document.getElementById('scenarioCompletionLine');
+
+  function renderScenario(){
+    const s=decisionScenarios[decisionScenarioIndex];
+    scenarioNum.textContent=decisionScenarioIndex+1;
+    scenarioNumCn.textContent=decisionScenarioIndex+1;
+    scenarioTitle.textContent=s.title;
+    scenarioText.innerHTML=s.text;
+    scenarioTextCn.textContent=s.textCn;
+    decisionFeedback.className='feedback';
+    decisionFeedback.innerHTML='';
+    spokenCall.classList.remove('show');
+    spokenCall.innerHTML='';
+    nextScenario.classList.remove('show');
+    decisionScenarioSolved=false;
+
+    const yourTiles=s.your.map(g=>`<div class="tile"><span class="glyph">${g}</span></div>`).join('');
+    scenarioFormation.innerHTML=`
+      <div>
+        <div class="formation-label">Your tiles / 你的牌</div>
+        <div class="mini-hand">${yourTiles}</div>
+      </div>
+      <div class="plus">+</div>
+      <div>
+        <div class="formation-label">${s.discardLabel}</div>
+        <div class="mini-hand"><div class="tile"><span class="glyph">${s.discard}</span></div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div><div class="formation-label">Your decision / 你的决定</div><strong style="color:var(--gt-navy)">?</strong></div>
+    `;
+    const doneCount=decisionScenarioCompleted.filter(Boolean).length;
+    scenarioCompletionLine.textContent=`${doneCount}/3 scenarios completed. / 已完成 ${doneCount}/3 个情境。`;
+  }
+
+  document.querySelectorAll('.decision').forEach(b=>b.onclick=()=>{
+    const s=decisionScenarios[decisionScenarioIndex];
+    const ok=b.dataset.answer===s.correct;
+    decisionFeedback.className='feedback '+(ok?'good':'bad');
+    decisionFeedback.innerHTML=(ok?s.feedback:s.wrong)+
+      `<span class="zhfb">${ok?s.feedbackCn:s.wrongCn}</span>`;
+
+    if(ok && !decisionScenarioSolved){
+      decisionScenarioSolved=true;
+      decisionScenarioCompleted[decisionScenarioIndex]=true;
+
+      if(s.call){
+        spokenCall.innerHTML=`<div class="mini">At the table, say / 牌桌上说：</div><strong>${s.call} · ${s.callPinyin}</strong><button class="listen" data-say="${s.call}" style="width:auto;margin-left:10px">🔊 Listen / 听</button>`;
+        spokenCall.classList.add('show');
+        spokenCall.querySelector('.listen')?.addEventListener('click',()=>speakChinese(s.call));
+      }else{
+        spokenCall.innerHTML='<div class="mini">Action / 操作：</div><strong>Pass / 放弃</strong>';
+        spokenCall.classList.add('show');
+      }
+
+      const doneCount=decisionScenarioCompleted.filter(Boolean).length;
+      scenarioCompletionLine.textContent=`${doneCount}/3 scenarios completed. / 已完成 ${doneCount}/3 个情境。`;
+
+      if(doneCount>=3){
+        completeStage(3);
+      }else{
+        nextScenario.classList.add('show');
+      }
+    }
+  });
+
+  nextScenario.addEventListener('click',()=>{
+    if(!decisionScenarioSolved) return;
+    decisionScenarioIndex=Math.min(decisionScenarioIndex+1,decisionScenarios.length-1);
+    renderScenario();
+  });
+
+  renderScenario();
+
+  // -----------------------------
+  // Module 4: two listening rounds + two visual-pattern rounds
+  // -----------------------------
+  const calls=['吃','碰','杠','和'];
+  let audioRoundIndex=0;
+  let audioCorrectCount=0;
+  let audioRoundSolved=false;
+  let audioSequence=[];
+
+  const patternBank=[
+    {
+      answer:'pung',
+      tiles:['🀔','🀔','🀔'],
+      good:'Correct. Three identical tiles form a Pung — 碰.',
+      goodCn:'正确。三张相同的牌组成刻子，对应“碰”。',
+      bad:'Not quite. Count the tiles and check whether they are identical or consecutive before choosing a call.',
+      badCn:'还不对。先数牌的数量，再判断它们是完全相同还是数字连续，然后再选择口令。'
+    },
+    {
+      answer:'kong',
+      tiles:['🀞','🀞','🀞','🀞'],
+      good:'Correct. Four identical tiles form a Kong — 杠.',
+      goodCn:'正确。四张相同的牌组成杠，对应“杠”。',
+      bad:'Not quite. Check whether every tile is identical, then pay attention to how many tiles are in the set.',
+      badCn:'还不对。先确认每张牌是否完全相同，再特别注意这个牌组一共有几张牌。'
+    },
+    {
+      answer:'chow',
+      tiles:['🀇','🀈','🀉'],
+      good:'Correct. Three consecutive tiles of the same suit form a Chow — 吃.',
+      goodCn:'正确。同一花色的三张连续数字牌组成顺子，对应“吃”。',
+      bad:'Not quite. Check whether the values are consecutive and whether all three tiles belong to the same numbered suit.',
+      badCn:'还不对。检查数字是否连续，并确认三张牌是否属于同一个数字花色。'
+    }
+  ];
+  let patternSequence=[];
+  let patternRoundIndex=0;
+  let patternCorrectCount=0;
+  let patternRoundSolved=false;
+
+  function randomTwoDistinct(arr){
+    const copy=[...arr];
+    for(let i=copy.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [copy[i],copy[j]]=[copy[j],copy[i]];
+    }
+    return copy.slice(0,2);
+  }
+
+  function prepareAudioSequence(){
+    audioSequence=randomTwoDistinct(calls);
+  }
+  function preparePatternSequence(){
+    patternSequence=randomTwoDistinct(patternBank);
+  }
+
+  const audioButton=document.querySelector('[data-random-audio]');
+  const audioFeedback=document.getElementById('audioFeedback');
+  const nextAudioRound=document.getElementById('nextAudioRound');
+  const audioRoundNum=document.getElementById('audioRoundNum');
+  const audioMiniProgress=document.getElementById('audioMiniProgress');
+
+  const finalPatternHand=document.getElementById('finalPatternHand');
+  const finalFeedback=document.getElementById('finalFeedback');
+  const nextPatternRound=document.getElementById('nextPatternRound');
+  const patternRoundNum=document.getElementById('patternRoundNum');
+  const patternMiniProgress=document.getElementById('patternMiniProgress');
+
+  let actChallengeDone=false;
+
+  function updateChallengeCompletion(){
+    const finished=(audioCorrectCount>=2 && patternCorrectCount>=2 && actChallengeDone);
+    document.getElementById('completeBox').style.display=finished?'block':'none';
+    if(finished) completeStage(4);
+  }
+
+  function renderAudioRound(){
+    audioRoundNum.textContent=audioRoundIndex+1;
+    audioFeedback.className='feedback';
+    audioFeedback.innerHTML='';
+    nextAudioRound.classList.remove('show');
+    audioRoundSolved=false;
+    audioMiniProgress.textContent=`${audioCorrectCount}/2 completed`;
+  }
+
+  audioButton.addEventListener('click',()=>{
+    const current=audioSequence[audioRoundIndex];
+    speakChinese(current);
+    audioFeedback.className='feedback';
+    audioFeedback.innerHTML='';
+  });
+
+  document.querySelectorAll('.audio-answer').forEach(b=>b.addEventListener('click',()=>{
+    const current=audioSequence[audioRoundIndex];
+    const ok=b.dataset.call===current;
+    audioFeedback.className='feedback '+(ok?'good':'bad');
+    audioFeedback.innerHTML=ok
+      ? `Correct. You heard “${current}”.<span class="zhfb">正确。你听到的是“${current}”。</span>`
+      : 'Not quite. Replay the call once, then compare the sound with the four table calls you practiced above.<span class="zhfb">还不对。重新播放一次，再把听到的声音与前面练习过的四个牌桌口令进行比较。</span>';
+
+    if(ok && !audioRoundSolved){
+      audioRoundSolved=true;
+      audioCorrectCount++;
+      audioMiniProgress.textContent=`${audioCorrectCount}/2 completed`;
+      if(audioCorrectCount<2) nextAudioRound.classList.add('show');
+      updateChallengeCompletion();
+    }
+  }));
+
+  nextAudioRound.addEventListener('click',()=>{
+    if(!audioRoundSolved || audioRoundIndex>=1) return;
+    audioRoundIndex++;
+    renderAudioRound();
+  });
+
+  function renderPatternRound(){
+    const item=patternSequence[patternRoundIndex];
+    patternRoundNum.textContent=patternRoundIndex+1;
+    finalPatternHand.innerHTML=item.tiles.map(g=>`<div class="tile"><span class="glyph">${g}</span></div>`).join('');
+    finalFeedback.className='feedback';
+    finalFeedback.innerHTML='';
+    nextPatternRound.classList.remove('show');
+    patternRoundSolved=false;
+    patternMiniProgress.textContent=`${patternCorrectCount}/2 completed`;
+  }
+
+  document.querySelectorAll('.pattern-final').forEach(b=>b.addEventListener('click',()=>{
+    const item=patternSequence[patternRoundIndex];
+    const ok=b.dataset.answer===item.answer;
+    finalFeedback.className='feedback '+(ok?'good':'bad');
+    finalFeedback.innerHTML=(ok?item.good:item.bad)+
+      `<span class="zhfb">${ok?item.goodCn:item.badCn}</span>`;
+
+    if(ok && !patternRoundSolved){
+      patternRoundSolved=true;
+      patternCorrectCount++;
+      patternMiniProgress.textContent=`${patternCorrectCount}/2 completed`;
+      if(patternCorrectCount<2) nextPatternRound.classList.add('show');
+      updateChallengeCompletion();
+    }
+  }));
+
+  nextPatternRound.addEventListener('click',()=>{
+    if(!patternRoundSolved || patternRoundIndex>=1) return;
+    patternRoundIndex++;
+    renderPatternRound();
+  });
+
+
+  // -----------------------------
+  // Challenge C: two practice mini-turns
+  // Round 1: draw 3 Characters to complete 1-2-3 Characters; discard East.
+  // Round 2: draw 7 Dots to complete a triplet; discard White Dragon.
+  // -----------------------------
+  const miniTurnScenarios=[
+    {
+      title:'Mini-Turn 1 — Complete a Sequence',
+      titleCn:'微型回合 1 — 摸牌补成顺子',
+      base:[
+        {id:'c1',glyph:'🀇',label:'1 Character'},
+        {id:'c2',glyph:'🀈',label:'2 Characters'},
+        {id:'b5a',glyph:'🀔',label:'5 Bamboo'},
+        {id:'b5b',glyph:'🀔',label:'5 Bamboo'},
+        {id:'d2',glyph:'🀚',label:'2 Dots'},
+        {id:'d3',glyph:'🀛',label:'3 Dots'},
+        {id:'east',glyph:'🀀',label:'East Wind'}
+      ],
+      draw:{id:'c3',glyph:'🀉',label:'3 Characters'},
+      finalOrder:['c1','c2','c3','b5a','b5b','d2','d3','east'],
+      organizeTargets:['c1','c2'],
+      organizeGood:'Good. You placed the drawn 3 Characters beside 1 and 2 Characters. Now evaluate what pattern this creates.<br/><span class="zhfb">很好。你把摸到的三万整理到一万、二万旁边。现在判断它形成了什么牌型。</span>',
+      organizeBad:'Try again. Look for numbered tiles that connect directly to the drawn 3 Characters, then place it beside that group.<br/><span class="zhfb">再试一次。寻找能与摸到的三万直接连接的数字牌，再把它放到那组牌旁边。</span>',
+      correctEval:'sequence',
+      discardId:'east',
+      drawFeedback:'You drew <strong>3 Characters</strong>. Look at the hand and decide what this tile changes.<br/><span class="zhfb">你摸到了三万。观察手牌，判断这张牌带来了什么变化。</span>',
+      evalGood:'Correct. The drawn 3 Characters completes <strong>1–2–3 Characters</strong>, a visible Chow pattern.<br/><span class="zhfb">正确。摸到的三万与一万、二万补成了 1–2–3 万的顺子牌型。</span>',
+      evalBad:'Not quite. Compare the drawn tile with the nearby 1 and 2 Characters, then try again.<br/><span class="zhfb">还不对。请把摸到的三万与手中的一万、二万联系起来，再判断一次。</span>',
+      discardInstruction:'<strong>Now discard one tile.</strong> Keep the useful pair and developing sequences; choose the clearly isolated tile. / <strong>现在出一张牌。</strong> 保留有用的对子和连续牌，选择明显孤立的牌。',
+      discardGood:'Correct. East Wind is the clearly isolated tile in this practice state. You kept the completed 1–2–3 Characters, the 5 Bamboo pair, and the developing 2–3 Dots pattern.<br/><span class="zhfb">正确。在这个脚本化练习情境中，东风是明显孤立的牌。你保留了已完成的 1–2–3 万、五条对子，以及可继续发展的 2–3 筒。</span>',
+      discardBad:'Try again. Keep tiles that already form or clearly support the visible patterns; look for the isolated tile.<br/><span class="zhfb">再试一次。优先保留已经组成或明显支持当前牌型的牌，找出那张孤立牌。</span>'
+    },
+    {
+      title:'Mini-Turn 2 — Complete an Identical-Tile Set',
+      titleCn:'微型回合 2 — 摸牌补成相同牌组',
+      base:[
+        {id:'d7a',glyph:'🀟',label:'7 Dots'},
+        {id:'d7b',glyph:'🀟',label:'7 Dots'},
+        {id:'b3',glyph:'🀒',label:'3 Bamboo'},
+        {id:'b4',glyph:'🀓',label:'4 Bamboo'},
+        {id:'c6',glyph:'🀌',label:'6 Characters'},
+        {id:'c7',glyph:'🀍',label:'7 Characters'},
+        {id:'white',glyph:'🀆',label:'White Dragon'}
+      ],
+      draw:{id:'d7c',glyph:'🀟',label:'7 Dots'},
+      finalOrder:['d7a','d7b','d7c','b3','b4','c6','c7','white'],
+      organizeTargets:['d7a','d7b'],
+      organizeGood:'Good. You grouped the drawn 7 Dots with the two matching 7 Dots. Now evaluate what changed.<br/><span class="zhfb">很好。你把摸到的七筒与原来的两张七筒整理到了一起。现在判断牌型发生了什么变化。</span>',
+      organizeBad:'Try again. Scan the hand for tiles with exactly the same face as the drawn 7 Dots, then group them together.<br/><span class="zhfb">再试一次。先在手牌中寻找与摸到的七筒牌面完全相同的牌，再把它们整理到一起。</span>',
+      correctEval:'triplet',
+      discardId:'white',
+      drawFeedback:'You drew <strong>7 Dots</strong>. Decide what changes in the practice hand.<br/><span class="zhfb">你摸到了七筒。观察练习手牌，判断牌型发生了什么变化。</span>',
+      evalGood:'Correct. The drawn 7 Dots joins the pair to create <strong>three identical 7 Dots</strong>, a Pung pattern.<br/><span class="zhfb">正确。摸到的七筒与原来的七筒对子组成三张相同的七筒，即刻子牌型。</span>',
+      evalBad:'Not quite. Look for tiles that are already identical to the drawn 7 Dots, then try again.<br/><span class="zhfb">还不对。找一找手牌中是否已经有与摸到的七筒相同的牌，再判断一次。</span>',
+      discardInstruction:'<strong>Now discard one tile.</strong> Keep the completed 7 Dots set and the developing numbered sequences; choose the isolated Honor tile. / <strong>现在出一张牌。</strong> 保留已完成的七筒牌组和可发展的数字连续牌，选择孤立的字牌。',
+      discardGood:'Correct. White Dragon is isolated in this practice state. You kept the completed 7 Dots set plus the developing 3–4 Bamboo and 6–7 Characters patterns.<br/><span class="zhfb">正确。在这个脚本化情境中，白板是孤立牌。你保留了完整的七筒牌组，以及可继续发展的 3–4 条和 6–7 万。</span>',
+      discardBad:'Try again. Keep the completed identical-tile set and the useful numbered connections; look for the isolated Honor tile.<br/><span class="zhfb">再试一次。保留已经完成的相同牌组和有用的数字连接，找出孤立的字牌。</span>'
+    }
+  ];
+
+  let miniTurnRound=0;
+  let miniTurnCompleted=[false,false];
+  let miniTurnTiles=[];
+  let miniTurnPhase='draw'; // draw -> organize -> evaluate -> discard -> complete
+  let miniTurnEvaluationSolved=false;
+
+  const miniTurnHand=document.getElementById('miniTurnHand');
+  const dragHandCue=document.getElementById('dragHandCue');
+  const organizeInstruction=document.getElementById('organizeInstruction');
+  const drawPracticeTile=document.getElementById('drawPracticeTile');
+  const evaluateArea=document.getElementById('evaluateArea');
+  const miniTurnFeedback=document.getElementById('miniTurnFeedback');
+  const discardInstruction=document.getElementById('discardInstruction');
+  const discardDragNote=document.getElementById('discardDragNote');
+  const actComplete=document.getElementById('actComplete');
+  const nextMiniTurn=document.getElementById('nextMiniTurn');
+  const resetMiniTurn=document.getElementById('resetMiniTurn');
+  const turnStepDraw=document.getElementById('turnStepDraw');
+  const turnStepEvaluate=document.getElementById('turnStepEvaluate');
+  const turnStepDiscard=document.getElementById('turnStepDiscard');
+  const miniTurnBadge=document.getElementById('miniTurnBadge');
+  const miniTurnRoundTitle=document.getElementById('miniTurnRoundTitle');
+  const miniTurnRoundTitleCn=document.getElementById('miniTurnRoundTitleCn');
+  const miniTurnRoundProgress=document.getElementById('miniTurnRoundProgress');
+  const wallCue=document.getElementById('wallCue');
+
+  function currentMiniTurn(){
+    return miniTurnScenarios[miniTurnRound];
+  }
+
+  function setTurnStep(step){
+    const map={draw:turnStepDraw,evaluate:turnStepEvaluate,discard:turnStepDiscard};
+    Object.entries(map).forEach(([key,el])=>{
+      el.classList.toggle('active',key===step);
+      if(
+        (step==='evaluate' && key==='draw') ||
+        (step==='discard' && (key==='draw'||key==='evaluate')) ||
+        (step==='complete')
+      ){
+        el.classList.add('done');
+        el.classList.remove('active');
+        el.querySelector('.turn-num').textContent='✓';
+      }else if(key!==step){
+        if(!(miniTurnPhase==='complete')) el.classList.remove('done');
+        if(!el.classList.contains('done')){
+          el.querySelector('.turn-num').textContent=key==='draw'?'1':key==='evaluate'?'2':'3';
+        }
+      }
+    });
+    if(step==='complete'){
+      [turnStepDraw,turnStepEvaluate,turnStepDiscard].forEach(el=>{
+        el.classList.add('done');
+        el.classList.remove('active');
+        el.querySelector('.turn-num').textContent='✓';
+      });
+    }
+  }
+
+  function updateMiniTurnHeader(){
+    const s=currentMiniTurn();
+    miniTurnBadge.textContent=`Mini-Turn ${miniTurnRound+1} of 2 / 微型回合 ${miniTurnRound+1}/2`;
+    miniTurnRoundTitle.textContent=s.title;
+    miniTurnRoundTitleCn.textContent=s.titleCn;
+    miniTurnRoundProgress.textContent=`${miniTurnCompleted.filter(Boolean).length}/2 completed`;
+  }
+
+  function renderMiniTurnHand(animateDraw=false,animateRegroup=false){
+    miniTurnHand.innerHTML='';
+
+    miniTurnTiles.forEach(tile=>{
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='practice-tile';
+
+      if(tile.drawn){
+        b.classList.add('drawn');
+        if(animateDraw) b.classList.add('draw-enter');
+      }
+      if(animateRegroup) b.classList.add('regroup-enter');
+
+      if(tile.drawn && miniTurnPhase==='organize'){
+        b.classList.add('draw-organizable');
+        b.setAttribute('title','Drag this drawn tile into the hand / 将摸到的牌拖入手牌');
+        attachDrawnTileDrag(b,tile);
+      }
+
+      if(miniTurnPhase==='discard'){
+        b.classList.add('discardable');
+      }
+
+      b.dataset.tileId=tile.id;
+      b.setAttribute('aria-label',tile.label);
+      b.innerHTML=`<span class="glyph">${tile.glyph}</span>`;
+
+      if(miniTurnPhase==='discard'){
+        attachDiscardDrag(b,tile);
+      }
+      miniTurnHand.appendChild(b);
+    });
+  }
+
+  function unionRectForTargets(ids){
+    const els=ids
+      .map(id=>miniTurnHand.querySelector(`[data-tile-id="${id}"]`))
+      .filter(Boolean);
+
+    if(!els.length) return null;
+
+    const rects=els.map(el=>el.getBoundingClientRect());
+    return {
+      left:Math.min(...rects.map(r=>r.left)),
+      right:Math.max(...rects.map(r=>r.right)),
+      top:Math.min(...rects.map(r=>r.top)),
+      bottom:Math.max(...rects.map(r=>r.bottom))
+    };
+  }
+
+  function clearDropHints(){
+    miniTurnHand.classList.remove('drag-active');
+    miniTurnHand.querySelectorAll('.drop-near').forEach(el=>el.classList.remove('drop-near'));
+  }
+
+  function moveDragHandCue(clientX,clientY){
+    if(!dragHandCue) return;
+    dragHandCue.style.left=`${clientX}px`;
+    dragHandCue.style.top=`${clientY}px`;
+  }
+
+  function showDragHandCue(clientX,clientY,isGrabbing=false){
+    if(!dragHandCue) return;
+    moveDragHandCue(clientX,clientY);
+    dragHandCue.textContent=isGrabbing?'✊':'🖐️';
+    dragHandCue.classList.toggle('grabbing',isGrabbing);
+    dragHandCue.classList.add('show');
+  }
+
+  function hideDragHandCue(){
+    if(!dragHandCue) return;
+    dragHandCue.classList.remove('show','grabbing');
+    dragHandCue.textContent='🖐️';
+  }
+
+  function attachDrawnTileDrag(el,tile){
+    let pointerId=null;
+    let startX=0;
+    let startY=0;
+    let dx=0;
+    let dy=0;
+
+    const highlightTargets=()=>{
+      const s=currentMiniTurn();
+      s.organizeTargets.forEach(id=>{
+        miniTurnHand.querySelector(`[data-tile-id="${id}"]`)?.classList.add('drop-near');
+      });
+    };
+
+    const resetVisual=()=>{
+      el.style.transform='';
+      el.style.transition='';
+      el.classList.remove('dragging');
+      clearDropHints();
+    };
+
+    el.addEventListener('pointerenter',e=>{
+      if(miniTurnPhase==='organize'){
+        showDragHandCue(e.clientX,e.clientY,false);
+      }
+    });
+
+    el.addEventListener('pointerleave',()=>{
+      if(pointerId===null){
+        hideDragHandCue();
+      }
+    });
+
+    el.addEventListener('pointerdown',e=>{
+      if(miniTurnPhase!=='organize') return;
+
+      pointerId=e.pointerId;
+      startX=e.clientX;
+      startY=e.clientY;
+      dx=0;
+      dy=0;
+
+      el.setPointerCapture(pointerId);
+      el.classList.add('dragging');
+      miniTurnHand.classList.add('drag-active');
+      highlightTargets();
+      showDragHandCue(e.clientX,e.clientY,true);
+
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointermove',e=>{
+      if(pointerId===null || e.pointerId!==pointerId) return;
+      dx=e.clientX-startX;
+      dy=e.clientY-startY;
+      el.style.transform=`translate(${dx}px, ${dy}px)`;
+      moveDragHandCue(e.clientX,e.clientY);
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointerup',e=>{
+      if(pointerId===null || e.pointerId!==pointerId) return;
+
+      const s=currentMiniTurn();
+      const targetRect=unionRectForTargets(s.organizeTargets);
+      const padding=34;
+      const success=targetRect &&
+        e.clientX>=targetRect.left-padding &&
+        e.clientX<=targetRect.right+padding &&
+        e.clientY>=targetRect.top-padding &&
+        e.clientY<=targetRect.bottom+padding;
+
+      try{ el.releasePointerCapture(pointerId); }catch(_){}
+      pointerId=null;
+      hideDragHandCue();
+
+      if(success){
+        clearDropHints();
+
+        // Integrate the drawn tile into the scripted hand order.
+        const order=new Map(s.finalOrder.map((id,index)=>[id,index]));
+        miniTurnTiles=miniTurnTiles
+          .map(t=>({...t,drawn:false}))
+          .sort((a,b)=>(order.get(a.id)??999)-(order.get(b.id)??999));
+
+        hideDragHandCue();
+        miniTurnPhase='evaluate';
+        organizeInstruction.classList.remove('show');
+        evaluateArea.classList.add('show');
+        miniTurnFeedback.className='turn-feedback show good';
+        miniTurnFeedback.innerHTML=s.organizeGood;
+        setTurnStep('evaluate');
+        renderMiniTurnHand(false,true);
+      }else{
+        el.style.transition='transform .28s ease';
+        el.style.transform='translate(0,0)';
+        miniTurnFeedback.className='turn-feedback show bad';
+        miniTurnFeedback.innerHTML=s.organizeBad;
+
+        window.setTimeout(()=>{
+          resetVisual();
+        },290);
+      }
+
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointercancel',()=>{
+      pointerId=null;
+      hideDragHandCue();
+      resetVisual();
+    });
+  }
+
+  function loadMiniTurnRound(roundIndex){
+    miniTurnRound=roundIndex;
+    const s=currentMiniTurn();
+    miniTurnTiles=s.base.map(x=>({...x}));
+    miniTurnPhase='draw';
+    miniTurnEvaluationSolved=false;
+
+    hideDragHandCue();
+    drawPracticeTile.disabled=false;
+    drawPracticeTile.style.display='inline-block';
+    if(wallCue) wallCue.style.display='inline-flex';
+    evaluateArea.classList.remove('show');
+    organizeInstruction.classList.remove('show');
+    miniTurnFeedback.className='turn-feedback';
+    miniTurnFeedback.innerHTML='';
+    discardInstruction.classList.remove('show');
+    discardInstruction.innerHTML=s.discardInstruction;
+    discardDragNote.classList.remove('show');
+    actComplete.classList.remove('show');
+    nextMiniTurn.classList.remove('show');
+    resetMiniTurn.classList.remove('show');
+
+    [turnStepDraw,turnStepEvaluate,turnStepDiscard].forEach((el,i)=>{
+      el.classList.remove('done','active');
+      el.querySelector('.turn-num').textContent=String(i+1);
+    });
+
+    updateMiniTurnHeader();
+    setTurnStep('draw');
+    renderMiniTurnHand();
+  }
+
+  function resetMiniTurnState(){
+    miniTurnCompleted=[false,false];
+    actChallengeDone=false;
+    loadMiniTurnRound(0);
+    updateChallengeCompletion();
+  }
+
+  drawPracticeTile.addEventListener('click',()=>{
+    if(miniTurnPhase!=='draw') return;
+    const s=currentMiniTurn();
+
+    // Drawn tile first appears separated on the far right.
+    miniTurnTiles.push({...s.draw,drawn:true});
+    miniTurnPhase='organize';
+    drawPracticeTile.disabled=true;
+    drawPracticeTile.style.display='none';
+    if(wallCue) wallCue.style.display='none';
+
+    evaluateArea.classList.remove('show');
+    organizeInstruction.classList.add('show');
+    miniTurnFeedback.className='turn-feedback show';
+    miniTurnFeedback.innerHTML=s.drawFeedback+
+      '<br/><strong>Next:</strong> drag the drawn tile into the hand where it belongs. / <strong>下一步：</strong>把摸到的牌拖到手牌中合适的位置。';
+
+    // Draw remains the current macro-step until the learner organizes the tile.
+    setTurnStep('draw');
+    renderMiniTurnHand(true);
+  });
+
+  document.querySelectorAll('.mini-eval').forEach(btn=>btn.addEventListener('click',()=>{
+    if(miniTurnPhase!=='evaluate') return;
+    const s=currentMiniTurn();
+    const ok=btn.dataset.eval===s.correctEval;
+    miniTurnFeedback.className='turn-feedback show '+(ok?'good':'bad');
+
+    if(ok){
+      miniTurnEvaluationSolved=true;
+      miniTurnFeedback.innerHTML=s.evalGood;
+      miniTurnPhase='discard';
+      evaluateArea.classList.remove('show');
+      discardInstruction.innerHTML=s.discardInstruction;
+      discardInstruction.classList.add('show');
+      discardDragNote.classList.add('show');
+      setTurnStep('discard');
+
+      // The learner already organized the drawn tile manually.
+      // Re-render to enable drag-to-discard interaction.
+      renderMiniTurnHand();
+    }else{
+      miniTurnFeedback.innerHTML=s.evalBad;
+    }
+  }));
+
+  function finishMiniDiscard(tile,element){
+    const s=currentMiniTurn();
+
+    if(tile.id===s.discardId){
+      element.classList.add('correct-discard');
+
+      // The accepted discard physically leaves the hand.
+      miniTurnTiles=miniTurnTiles.filter(t=>t.id!==tile.id);
+
+      miniTurnPhase='complete';
+      miniTurnCompleted[miniTurnRound]=true;
+      organizeInstruction.classList.remove('show');
+      discardInstruction.classList.remove('show');
+      discardDragNote.classList.remove('show');
+      miniTurnFeedback.className='turn-feedback show good';
+      miniTurnFeedback.innerHTML=s.discardGood;
+      setTurnStep('complete');
+      renderMiniTurnHand(false,true);
+      updateMiniTurnHeader();
+
+      if(miniTurnCompleted.every(Boolean)){
+        actChallengeDone=true;
+        actComplete.innerHTML='✓ Two mini-turns complete. You applied Draw → Organize → Evaluate → Discard across two different pattern changes. / 两个微型回合完成：你已经在两种不同牌型变化中完成摸牌、整理、判断和出牌。';
+        actComplete.classList.add('show');
+        resetMiniTurn.classList.add('show');
+        updateChallengeCompletion();
+      }else{
+        actComplete.innerHTML='✓ Mini-Turn 1 complete. Now try the same procedure with a different pattern change. / 微型回合 1 完成。接下来用同样流程处理另一种牌型变化。';
+        actComplete.classList.add('show');
+        nextMiniTurn.classList.add('show');
+      }
+      return true;
+    }
+
+    miniTurnFeedback.className='turn-feedback show bad';
+    miniTurnFeedback.innerHTML=s.discardBad;
+    return false;
+  }
+
+  function attachDiscardDrag(el,tile){
+    let pointerId=null;
+    let startX=0;
+    let startY=0;
+    let dx=0;
+    let dy=0;
+
+    const resetDiscardVisual=()=>{
+      el.style.transform='';
+      el.style.transition='';
+      el.classList.remove('discard-dragging');
+      miniTurnHand.classList.remove('discard-active');
+      hideDragHandCue();
+    };
+
+    el.addEventListener('pointerenter',e=>{
+      if(miniTurnPhase==='discard'){
+        showDragHandCue(e.clientX,e.clientY,false);
+      }
+    });
+
+    el.addEventListener('pointerleave',()=>{
+      if(pointerId===null){
+        hideDragHandCue();
+      }
+    });
+
+    el.addEventListener('pointerdown',e=>{
+      if(miniTurnPhase!=='discard') return;
+
+      pointerId=e.pointerId;
+      startX=e.clientX;
+      startY=e.clientY;
+      dx=0;
+      dy=0;
+
+      el.setPointerCapture(pointerId);
+      el.classList.add('discard-dragging');
+      miniTurnHand.classList.add('discard-active');
+      showDragHandCue(e.clientX,e.clientY,true);
+
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointermove',e=>{
+      if(pointerId===null || e.pointerId!==pointerId) return;
+
+      dx=e.clientX-startX;
+      dy=e.clientY-startY;
+      el.style.transform=`translate(${dx}px, ${dy}px)`;
+      moveDragHandCue(e.clientX,e.clientY);
+
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointerup',e=>{
+      if(pointerId===null || e.pointerId!==pointerId) return;
+
+      const handRect=miniTurnHand.getBoundingClientRect();
+      const outside=
+        e.clientX<handRect.left ||
+        e.clientX>handRect.right ||
+        e.clientY<handRect.top ||
+        e.clientY>handRect.bottom;
+
+      try{ el.releasePointerCapture(pointerId); }catch(_){}
+      pointerId=null;
+      hideDragHandCue();
+      miniTurnHand.classList.remove('discard-active');
+
+      if(outside){
+        const accepted=finishMiniDiscard(tile,el);
+
+        if(!accepted){
+          el.style.transition='transform .28s ease';
+          el.style.transform='translate(0,0)';
+          window.setTimeout(resetDiscardVisual,290);
+        }
+      }else{
+        el.style.transition='transform .28s ease';
+        el.style.transform='translate(0,0)';
+        miniTurnFeedback.className='turn-feedback show bad';
+        miniTurnFeedback.innerHTML='To discard, drag the tile outside the dashed hand area and release it.<br/><span class="zhfb">要出牌，请把牌拖出虚线手牌区域后再松开。</span>';
+        window.setTimeout(resetDiscardVisual,290);
+      }
+
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointercancel',()=>{
+      pointerId=null;
+      resetDiscardVisual();
+    });
+  }
+
+  nextMiniTurn.addEventListener('click',()=>{
+    if(!miniTurnCompleted[0]) return;
+    loadMiniTurnRound(1);
+    scrollToElement(document.getElementById('actChallenge'));
+  });
+
+  resetMiniTurn.addEventListener('click',()=>{
+    resetMiniTurnState();
+    scrollToElement(document.getElementById('actChallenge'));
+  });
+
+  resetMiniTurnState();
+
+
+  function resetQuickChallengeRounds(){
+    audioRoundIndex=0;
+    audioCorrectCount=0;
+    audioRoundSolved=false;
+    patternRoundIndex=0;
+    patternCorrectCount=0;
+    patternRoundSolved=false;
+    prepareAudioSequence();
+    preparePatternSequence();
+    renderAudioRound();
+    renderPatternRound();
+    resetMiniTurnState();
+    document.getElementById('completeBox').style.display='none';
+  }
+
+  prepareAudioSequence();
+  preparePatternSequence();
+  renderAudioRound();
+  renderPatternRound();
+
+  // -----------------------------
+  // V0.6.2: lightweight completion celebration
+  // -----------------------------
+  // -----------------------------
+  // V0.6.2: Stage Complete action buttons
+  // -----------------------------
+  document.getElementById('stage1More').addEventListener('click',()=>{
+    const mixedTab=document.querySelector('.decode-tab[data-decode="mixed"]');
+    if(mixedTab) mixedTab.click();
+    startMixedSet();
+    scrollToElement(document.querySelector('#decode-mixed .mixed-practice'));
+  });
+  document.getElementById('stage1Continue').addEventListener('click',()=>goToStage(2));
+
+  document.getElementById('stage2More').addEventListener('click',()=>{
+    const chowTab=document.querySelector('.lesson-tab[data-lesson="chow"]');
+    if(chowTab) chowTab.click();
+    nextDrag.click();
+    scrollToElement(document.querySelector('#lesson-chow .drag-lab'));
+  });
+  document.getElementById('stage2Continue').addEventListener('click',()=>goToStage(3));
+
+  document.getElementById('stage3Review').addEventListener('click',()=>{
+    decisionScenarioIndex=0;
+    decisionScenarioSolved=false;
+    decisionScenarioCompleted=[false,false,false];
+    document.getElementById('stageComplete3').classList.remove('show');
+    renderScenario();
+    // Keep the global Decide stage historically completed during optional review.
+    progressState.completed[2]=true;
+    renderProgress();
+    scrollToElement(document.querySelector('#decide .scenario'));
+  });
+  document.getElementById('stage3Continue').addEventListener('click',()=>goToStage(4));
+
+  document.getElementById('stage4Practice').addEventListener('click',()=>{
+    resetQuickChallengeRounds();
+    document.getElementById('stageComplete4').classList.remove('show');
+    // Keep Step 4 historically completed in the progress strip; this is optional extra practice.
+    progressState.completed[3]=true;
+    renderProgress();
+    scrollToElement(document.querySelector('#challenge .challenge-grid'));
+  });
+  document.getElementById('stage4Review').addEventListener('click',()=>{
+    const nav=document.querySelector('.module-nav');
+    if(nav) nav.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+
+</script>
+</body>
+</html>
