@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Module 5 — Watch the Game v0.0.21</title>
+<style>
+:root{
+  --gt-navy:#003057; --gt-navy-deep:#001f3d; --gt-gold:#B3A369; --gt-gold-dark:#857437;
+  --paper:#fff; --canvas:#f4f5f6; --ink:#102033; --muted:#667085; --line:#d6dbe2; --soft:#eef1f4;
+  --good:#e9f5ee; --good-line:#9bc7ad; --bad:#fff0f0; --bad-line:#e7b7b7;
+  --table:#17684d; --table2:#1c7b5a; --shadow:0 12px 30px rgba(0,48,87,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;color:var(--ink);
+  font:16px/1.5 system-ui,-apple-system,"Segoe UI",Arial,"Microsoft YaHei",sans-serif;
+  background:var(--canvas)
+}
+button{font:inherit}
+.app{max-width:1380px;margin:0 auto;padding:22px 18px 48px}
+.hero{
+  background:#fff;border-top:6px solid var(--gt-gold);box-shadow:var(--shadow);
+  padding:24px 26px;margin-bottom:16px;position:relative;overflow:hidden
+}
+.hero:after{
+  content:"🀇  🀐  🀙  🀀";position:absolute;right:20px;top:8px;font-size:64px;
+  color:rgba(0,48,87,.045);letter-spacing:9px;pointer-events:none
+}
+.hero-row{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;position:relative;z-index:1}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--gt-gold-dark)}
+h1{margin:4px 0 4px;color:var(--gt-navy);font-size:34px;line-height:1.1}
+.subtitle{color:#465466;font-size:17px;max-width:850px}
+.cn{color:var(--gt-gold-dark);font-weight:700;font-size:14px;margin-top:4px}
+.version{border:1px solid var(--gt-gold);padding:7px 10px;background:#fffdf7;color:var(--gt-navy);font-size:12px;font-weight:900;white-space:nowrap}
+.notice{margin-top:16px;border-left:4px solid var(--gt-gold);background:#fafbfc;padding:12px 14px;color:#465466}
+.notice strong{color:var(--gt-navy)}
+.hero-toggle{
+  border:1px solid var(--gt-gold);background:#fffdf7;color:var(--gt-navy);
+  width:34px;height:34px;border-radius:50%;font-size:21px;font-weight:900;cursor:pointer;
+  display:grid;place-items:center;line-height:1
+}
+.hero.collapsed{padding:12px 18px;border-top-width:4px}
+.hero.collapsed .hero-details,.hero.collapsed .notice,.hero.collapsed .subtitle,.hero.collapsed .cn,.hero.collapsed .version{display:none}
+.hero.collapsed h1{font-size:23px;margin:0}
+.hero.collapsed .eyebrow{display:none}
+.hero.collapsed:after{display:none}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.btn{border:1px solid var(--line);background:#fff;color:var(--gt-navy);padding:10px 14px;font-weight:850;cursor:pointer}
+.btn.primary{background:var(--gt-navy);color:#fff;border-color:var(--gt-navy)}
+.btn.draw-phase{background:#fff8df;color:#6d5915;border-color:#d8bd59}
+.btn.resolve-phase{background:var(--gt-navy);color:#fff;border-color:var(--gt-navy)}
+.btn.next-phase{background:#fff;color:var(--gt-navy);border-color:#9fb2c4}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.statusbar{background:#fff;border:1px solid var(--line);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:14px}
+.progressline{height:8px;background:var(--soft);overflow:hidden}
+.progressfill{height:100%;background:linear-gradient(90deg,var(--gt-gold),var(--gt-navy));width:0%;transition:width .35s ease}
+.statuscopy strong{color:var(--gt-navy)}
+.table-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
+.table-card{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);padding:16px}
+.side-card{background:#fff;border:1px solid var(--line);padding:14px;position:sticky;top:14px}
+.mahjong-table{
+  position:relative;
+  display:grid;
+  grid-template-areas:"north north north" "west center east" "south south south";
+  grid-template-columns:1fr 1.16fr 1fr;
+  gap:10px;
+  background:radial-gradient(circle at 50% 50%,var(--table2) 0 34%,var(--table) 35% 100%);
+  border:7px solid #8a6f2c;border-radius:24px;padding:14px;min-height:760px;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.15)
+}
+.turn-arrow{
+  position:absolute;left:50%;top:50%;width:125px;height:125px;transform:translate(-50%,-50%);
+  border:2px dashed rgba(255,255,255,.38);border-radius:50%;pointer-events:none
+}
+.turn-arrow:after{
+  content:"↺";position:absolute;left:50%;top:50%;transform:translate(-50%,-52%);
+  font-size:76px;line-height:1;color:rgba(255,255,255,.25);font-weight:400
+}
+.player{background:rgba(255,255,255,.97);border:2px solid rgba(0,48,87,.15);padding:10px;border-radius:14px;min-width:0;transition:.25s;position:relative}
+.player.active{border-color:var(--gt-gold);box-shadow:0 0 0 3px rgba(179,163,105,.23)}
+.player.claiming{border-color:#5b8f74;box-shadow:0 0 0 3px rgba(91,143,116,.22)}
+.north{grid-area:north}.south{grid-area:south}.west{grid-area:west}.east{grid-area:east}
+.center{grid-area:center;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:9px;color:#fff;text-align:center;min-height:360px;z-index:1}
+.player-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.player-name{font-weight:950;color:var(--gt-navy)}
+.seat{font-size:11px;background:var(--soft);padding:3px 7px;border-radius:999px;color:#586477}
+.role{font-size:10px;font-weight:850;color:var(--gt-gold-dark)}
+.hand-meta{display:flex;justify-content:space-between;gap:8px;margin-top:6px;align-items:center}
+.hand-label{font-size:11px;color:var(--muted)}
+.tile-count{font-size:10px;font-weight:900;background:#f4f6f8;border:1px solid var(--line);border-radius:999px;padding:2px 6px;color:#4d5968}
+.hand-row{display:flex;gap:4px;align-items:flex-end;margin-top:5px;min-height:44px;overflow-x:auto;padding-bottom:2px}
+.hand-main{display:flex;gap:3px;flex-wrap:nowrap}
+.drawn-slot{display:flex;align-items:flex-end;margin-left:9px;padding-left:9px;border-left:2px dashed var(--gt-gold);min-height:41px}
+.tile{
+  width:28px;height:37px;flex:0 0 28px;border:1px solid #b8bdc4;border-radius:5px;
+  background:linear-gradient(#fff,#f3f2eb);display:flex;align-items:center;justify-content:center;
+  font-family:"Segoe UI Symbol","Noto Sans Symbols 2","Symbola",sans-serif;font-size:24px;
+  box-shadow:0 2px 2px rgba(0,0,0,.12);position:relative
+}
+.tile.drawn{border:2px solid var(--gt-gold);box-shadow:0 0 0 2px rgba(179,163,105,.18),0 3px 6px rgba(0,0,0,.15)}
+.tile.claimed{border-color:#5b8f74;background:#f3fff8}
+.meld-label{font-size:10px;font-weight:950;color:var(--gt-gold-dark);margin-top:6px}
+.melds{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;min-height:35px}
+.meld-group{display:inline-flex;gap:2px;padding:3px;background:#fff8df;border:1px solid #e1cf8f;border-radius:6px;align-items:center}
+.meld-name{font-size:9px;font-weight:950;color:#725e19;padding:0 3px}
+.meld-group .tile{width:24px;height:31px;flex-basis:24px;font-size:20px}
+.discard-title{font-weight:950;letter-spacing:.07em;text-transform:uppercase;font-size:11px;color:#d8e2dd}
+.current-action{font-size:18px;font-weight:950;max-width:300px}
+.current-action small{display:block;margin-top:5px;font-size:12px;font-weight:650;color:#dbe9e3}
+.river{
+  width:100%;max-width:330px;display:grid;grid-template-columns:repeat(6,28px);
+  gap:5px;justify-content:center;align-content:start;min-height:130px;padding:8px;
+  background:rgba(0,31,61,.22);border:1px solid rgba(255,255,255,.22);border-radius:12px
+}
+.river-entry{display:flex;flex-direction:column;align-items:center;gap:2px;position:relative}
+.river-entry .tile{width:28px;height:36px;font-size:23px}
+.river-entry.latest .tile{outline:3px solid #ffd84d;outline-offset:1px;transform:translateY(-2px)}
+.river-by{font-size:8px;line-height:1;font-weight:950;color:#fff;background:rgba(0,31,61,.62);padding:2px 3px;border-radius:4px;white-space:nowrap}
+.river-entry.latest .river-by{background:#ffd84d;color:#3b3200}
+.river-entry.claimed .tile{opacity:.55;filter:grayscale(.25)}
+.river-entry.claimed .river-by{background:#7b8794;color:#fff}
+.claim-note{
+  font-size:8px;line-height:1.1;font-weight:950;color:#fff;background:#5b8f74;
+  padding:2px 4px;border-radius:4px;text-align:center;max-width:58px
+}
+.river-entry.latest:before{
+  content:"↓ LATEST";
+  position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  font-size:8px;font-weight:1000;color:#ffe16a;white-space:nowrap;letter-spacing:.04em
+}
+.side-player .hand-row{display:block;overflow:visible}
+.side-player .hand-main{display:grid;grid-template-columns:repeat(7,28px);gap:4px;overflow:visible;max-width:none}
+.side-player .drawn-label{display:block;margin-top:8px;padding-top:7px;border-top:1px dashed var(--gt-gold);font-size:10px;font-weight:900;color:var(--gt-gold-dark)}
+.side-player .drawn-slot{margin:3px 0 0;padding:0;border-left:0;min-height:39px}
+.side-player .meld-label{margin-top:8px}
+.side-player .melds{min-height:35px}
+.observer{background:rgba(0,31,61,.78);padding:8px 11px;border-radius:999px;font-weight:850;font-size:12px}
+.direction-note{font-size:11px;color:#e6efe9;max-width:300px}
+.event-card{margin-top:14px;border:1px solid var(--line);background:#fff;padding:14px}
+.event-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.stepbadge{background:var(--gt-navy);color:#fff;padding:5px 9px;font-weight:900;font-size:12px}
+.event-title{font-size:20px;font-weight:950;color:var(--gt-navy);margin-top:8px}
+.event-desc{color:#465466;margin-top:3px}
+.reaction-strip{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.reaction{border:1px solid var(--line);background:#fafbfc;padding:8px;font-size:12px}
+.reaction strong{display:block;color:var(--gt-navy)}
+.reaction.win{background:#eef8f2;border-color:#a8cdb5}
+.priority-note{margin-top:8px;font-size:12px;background:#fff8df;border-left:4px solid var(--gt-gold);padding:8px 10px;color:#5d522b}
+.question{display:none;margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.question.show{display:block}
+.question h3{margin:0 0 8px;color:var(--gt-navy)}
+.options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.option{border:1px solid var(--line);background:#fff;padding:11px;cursor:pointer;font-weight:850;color:#3c4756}
+.option:hover{border-color:var(--gt-gold)}
+.option.correct{background:var(--good);border-color:var(--good-line);color:#23623d}
+.option.wrong{background:var(--bad);border-color:var(--bad-line);color:#8a3434}
+.feedback{display:none;margin-top:10px;padding:11px 12px}
+.feedback.show{display:block}
+.feedback.good{background:var(--good);border:1px solid var(--good-line)}
+.feedback.bad{background:var(--bad);border:1px solid var(--bad-line)}
+.side-card h3{margin:0 0 8px;color:var(--gt-navy)}
+.latest-card{border:1px solid var(--gt-gold);background:#fffdf7;padding:12px;margin-bottom:14px}
+.latest-big{display:flex;align-items:center;gap:10px}
+.latest-big .tile{width:42px;height:54px;flex-basis:42px;font-size:35px}
+.latest-copy strong{display:block;color:var(--gt-navy);font-size:16px}
+.latest-copy span{font-size:12px;color:var(--muted)}
+.glossary{margin-bottom:14px}
+.grow{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:center;border-top:1px solid var(--line);padding:7px 0}
+.grow:first-of-type{border-top:0}
+.grow small{color:var(--muted)}
+.timeline{margin-top:12px}
+.timeline-list{display:flex;flex-direction:column;gap:5px;max-height:390px;overflow:auto}
+.titem{display:grid;grid-template-columns:28px 1fr auto;gap:6px;align-items:center;border:1px solid var(--line);padding:7px;font-size:12px}
+.titem.current{border-color:var(--gt-gold);background:#fffdf7}
+.titem.done{opacity:.58}
+.tnum{width:24px;height:24px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:900;color:var(--gt-navy)}
+.chip{font-size:10px;font-weight:950;padding:3px 6px;border-radius:999px;background:var(--soft)}
+.chip.pass{background:#eef1f4}.chip.chow{background:#eef6ff}.chip.pung{background:#f3effc}.chip.kong{background:#fff5dc}.chip.hu{background:#e9f5ee}
+.follow-modal{
+  position:fixed;inset:0;background:rgba(0,31,61,.46);display:none;align-items:center;justify-content:center;
+  padding:20px;z-index:1000;backdrop-filter:blur(2px)
+}
+.follow-modal.show{display:flex}
+.follow-modal-card{
+  width:min(680px,96vw);background:#fff;border-top:6px solid var(--gt-gold);border-radius:18px;
+  box-shadow:0 24px 60px rgba(0,31,61,.28);padding:24px
+}
+.follow-modal-card .mini-label{font-size:12px;font-weight:950;letter-spacing:.08em;color:var(--gt-gold-dark);text-transform:uppercase}
+.term-card{margin-top:14px;padding:12px 14px;background:#fff8df;border-left:4px solid var(--gt-gold);color:#4f4524}
+.term-card strong{color:var(--gt-navy)}
+.waiting-tiles{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:10px}
+.waiting-tiles .tile{width:42px;height:54px;flex-basis:42px;font-size:34px}
+.strategy-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.strategy-card{border:1px solid var(--line);padding:12px;background:#fafbfc;border-radius:10px}
+.strategy-card h4{margin:0 0 7px;color:var(--gt-navy)}
+.strategy-card.good{background:#eef8f2;border-color:#a8cdb5}
+.strategy-card.warn{background:#fff8df;border-color:#dfc974}
+.dead-example{margin-top:12px;padding:12px;border:1px dashed #b99628;background:#fffdf5}
+.dead-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.dead-row .tile{width:32px;height:42px;flex-basis:32px;font-size:27px}
+@media(max-width:620px){.strategy-compare{grid-template-columns:1fr}}
+.follow-modal-card h2{margin:6px 0 8px;color:var(--gt-navy);font-size:25px}
+.follow-modal-card p{color:#526072}
+.follow-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:620px){.follow-modal-options{grid-template-columns:1fr}}
+.summary{display:none;margin-top:14px;background:#fff;border:2px solid var(--gt-gold);padding:20px;text-align:center}
+.summary.show{display:block}
+.summary h2{color:var(--gt-navy);margin:0}
+.score{font-size:38px;font-weight:1000;color:var(--gt-navy)}
+@media(max-width:1050px){
+  .table-wrap{grid-template-columns:1fr}.side-card{position:static}
+}
+@media(max-width:900px){
+  .mahjong-table{
+    grid-template-areas:"north north" "west east" "center center" "south south";
+    grid-template-columns:1fr 1fr;min-height:0
+  }
+  .options,.reaction-strip{grid-template-columns:1fr}
+  .hero-row{display:block}.version{display:inline-block;margin-top:10px}
+}
+@media(max-width:620px){
+  .app{padding:12px 8px 32px}.hero{padding:18px 16px}h1{font-size:28px}
+  .mahjong-table{padding:8px;gap:7px;border-width:5px;border-radius:16px}
+  .player{padding:7px}.tile{width:24px;height:32px;flex-basis:24px;font-size:20px}
+  .drawn-slot{margin-left:6px;padding-left:6px}.center{min-height:230px}
+  .river{grid-template-columns:repeat(6,24px);gap:4px}
+  .river-entry .tile{width:24px;height:31px;font-size:20px}
+  .side-player .hand-main{grid-template-columns:repeat(7,24px);gap:3px}
+  .toolbar .btn{flex:1}.hero:after{display:none}.turn-arrow{width:92px;height:92px}.turn-arrow:after{font-size:56px}
+}
+
+#checkpointCount{display:none}.player{position:relative}.thinking{display:inline-flex;align-items:center;gap:6px;margin:8px 0 0;color:#795e16;font-weight:800;font-size:12px}.thinking b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff0b8;border:1px solid #b3a369;font-size:22px}.player.think{border-color:#b3a369;box-shadow:0 0 0 2px #d7bd69}.observer-panel{margin-top:12px;padding:14px;border:1px solid var(--line);background:#fafbfc}.observer-panel h3{color:var(--gt-navy);margin:4px 0 10px}.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.demo-box{padding:10px;border:1px solid var(--line);background:white;border-radius:8px}.demo-box h4{margin:0 0 8px;color:var(--gt-navy)}.tile-demo{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.tile-demo .tile{width:37px;height:48px;flex-basis:37px;font-size:30px}.observer-panel .options{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.option.selected{background:#fff8df;border-color:#b3a369}.summary-lessons{display:grid;gap:8px;text-align:left}.summary-lessons>div{background:#fafbfc;padding:10px;border-left:4px solid var(--gt-gold)}.winner{border:3px solid #b3a369!important}.hu-badge{background:#fff0b8;color:#725e19;padding:4px 9px;border-radius:12px;font-weight:900}.fireworks{position:absolute;right:14%;bottom:20px;pointer-events:none;font-size:36px;color:#d89c16;animation:burst 1.2s ease-out 3}.fireworks span{display:inline-block;margin:0 8px}@keyframes burst{0%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1.5)}}@media(max-width:700px){.compare-grid{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){.fireworks{animation:none}}
+    .hu-fireworks{position:absolute;inset:0 0 0 58%;pointer-events:none;overflow:hidden;border-radius:12px;z-index:7}
+    .hu-fireworks span{position:absolute;left:50%;top:52%;font-size:26px;color:#d89c16;opacity:0;animation:huBurst 1.8s ease-out 3 both}
+    .hu-fireworks span:nth-child(1){--x:-150px;--y:-60px;animation-delay:0s}
+    .hu-fireworks span:nth-child(2){--x:-90px;--y:-105px;animation-delay:.12s}
+    .hu-fireworks span:nth-child(3){--x:-20px;--y:-82px;animation-delay:.22s}
+    .hu-fireworks span:nth-child(4){--x:65px;--y:-108px;animation-delay:.06s}
+    .hu-fireworks span:nth-child(5){--x:135px;--y:-58px;animation-delay:.18s}
+    .hu-fireworks span:nth-child(6){--x:-135px;--y:35px;animation-delay:.26s}
+    .hu-fireworks span:nth-child(7){--x:125px;--y:38px;animation-delay:.32s}
+    .hu-fireworks span:nth-child(8){--x:5px;--y:70px;animation-delay:.15s}
+    @keyframes huBurst{
+      0%{transform:translate(0,0) scale(.35);opacity:0}
+      12%{opacity:1}
+      70%{opacity:.9}
+      100%{transform:translate(var(--x),var(--y)) scale(1.35);opacity:0}
+    }
+
+/* Explicitly requested short winner celebration; no looping after the burst. */
+</style>
+<style>.discard-demo{display:inline-flex;flex-direction:column;align-items:center;border:2px dashed #b99628;padding:5px;border-radius:8px;background:#fff8df}.discard-demo small{font-size:11px;font-weight:bold}.tile-demo .meld-group{display:inline-flex;gap:4px}.observer-panel .option.correct{background:#fff8df;color:#003057;border-color:#b3a369}
+#checkpointCount{display:none}.player{position:relative}.thinking{display:inline-flex;align-items:center;gap:6px;margin:8px 0 0;color:#795e16;font-weight:800;font-size:12px}.thinking b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#fff0b8;border:1px solid #b3a369;font-size:22px}.player.think{border-color:#b3a369;box-shadow:0 0 0 2px #d7bd69}.observer-panel{margin-top:12px;padding:14px;border:1px solid var(--line);background:#fafbfc}.observer-panel h3{color:var(--gt-navy);margin:4px 0 10px}.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.demo-box{padding:10px;border:1px solid var(--line);background:white;border-radius:8px}.demo-box h4{margin:0 0 8px;color:var(--gt-navy)}.tile-demo{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.tile-demo .tile{width:37px;height:48px;flex-basis:37px;font-size:30px}.observer-panel .options{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}.option.selected{background:#fff8df;border-color:#b3a369}.summary-lessons{display:grid;gap:8px;text-align:left}.summary-lessons>div{background:#fafbfc;padding:10px;border-left:4px solid var(--gt-gold)}.winner{border:3px solid #b3a369!important}.hu-badge{background:#fff0b8;color:#725e19;padding:4px 9px;border-radius:12px;font-weight:900}.fireworks{position:absolute;right:14%;bottom:20px;pointer-events:none;font-size:36px;color:#d89c16;animation:burst 1.2s ease-out 3}.fireworks span{display:inline-block;margin:0 8px}@keyframes burst{0%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(1.5)}}@media(max-width:700px){.compare-grid{grid-template-columns:1fr}}@media(prefers-reduced-motion:reduce){.fireworks{animation:none}}
+</style><style>.kong-value{display:grid;gap:10px;margin:12px 0}.kong-value p,.review-card p{margin:9px 0 0;line-height:1.5}.value-flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;margin:12px 0;color:#003057}.value-flow span{padding:8px 12px;border:1px solid #d6dbe2;border-radius:8px;background:#fffdf7;font-weight:850;text-align:center}.value-flow b{color:#857437}.review-card{padding:14px;border:1px solid #d6dbe2;border-left:4px solid #b3a369;background:#fafbfc;border-radius:8px}.review-card header{display:flex;align-items:center;gap:10px;margin-bottom:12px}.review-card h3{margin:0;color:#003057;font-size:18px}.review-card small{color:#667085}.review-num{background:#003057;color:#fff;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;flex:none;font-weight:800}.review-card .compare-grid{margin:0}.review-card .demo-box>div:last-child{font-size:13px;color:#465466;margin-top:6px}</style></head>
+<body>
+<div class="app">
+  <section id="hero" class="hero">
+    <div class="hero-row">
+      <div>
+        <div class="eyebrow">Module 5 · Capstone Observation</div>
+        <h1>Watch the Game / 看懂牌局</h1>
+        <div class="hero-details">
+          <div class="subtitle">Follow a simplified four-player Mahjong replay from the fifth-person observer view. Track draws, discards, PASS decisions, claims, exposed melds, and the final Hu.</div>
+          <div class="cn">从第五人观战视角观察四人牌局：跟随摸牌、出牌、PASS、吃、碰、杠以及最后胡牌。</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="version">v0.0.21 · Teaching Replay</div>
+        <button id="heroToggle" class="hero-toggle" aria-label="Collapse introduction" title="Collapse / 展开或收起">−</button>
+      </div>
+    </div>
+    <div class="notice">
+      <strong>Teaching View:</strong> each player starts from a real 13-tile structure. When a player draws, the drawn tile appears separated at the far right as the temporary 14th tile. Exposed Chow/Pung/Kong groups remain visible. For learning purposes, all four hands are shown; in a real game opponents' concealed hands are hidden.
+    </div>
+  </section>
+
+  <div class="toolbar"><a id="foundationBack" class="btn" style="text-decoration:none" href="index.html">← Back to Foundation / 返回基础学习</a>
+    <button id="prevBtn" class="btn" title="Review navigation is under revision">← Previous Event</button>
+    <button id="playBtn" class="btn draw-phase">Show Draw / 显示摸牌 →</button>
+    <button id="nextBtn" class="btn next-phase" disabled>Next Event →</button>
+    <button id="resetBtn" class="btn">Restart Replay</button>
+  </div>
+
+  <div class="statusbar">
+    <div>
+      <div class="statuscopy"><strong id="statusTitle">Event 1 of 14</strong> · <span id="statusText">Player 1 draws before discarding.</span></div>
+      <div class="progressline"><div id="progressFill" class="progressfill"></div></div>
+    </div>
+    <div><strong id="checkpointCount">0 / 7 checkpoints</strong></div>
+  </div>
+
+  <div class="table-wrap">
+    <div>
+      <section class="table-card">
+        <div class="mahjong-table">
+          <div class="turn-arrow" title="Counterclockwise rotation / 逆时针轮转"></div>
+
+          <div id="p3" class="player north">
+            <div class="player-head"><div><span class="player-name">PLAYER 03</span> <span class="role">West / 西家</span></div><span class="seat">PLAYER 03 = WEST</span></div>
+            <div class="hand-meta"><span class="hand-label">Hand / 手牌</span><span class="tile-count"></span></div>
+            <div class="hand-row"><div class="hand-main"></div><div class="drawn-slot"></div></div>
+            <div class="meld-label">EXPOSED MELDS / 副露</div><div class="melds"></div>
+          </div>
+
+          <div id="p4" class="player west side-player">
+            <div class="player-head"><div><span class="player-name">PLAYER 04</span> <span class="role">North / 北家</span></div><span class="seat">PLAYER 04 = NORTH</span></div>
+            <div class="hand-meta"><span class="hand-label">Hand / 手牌 · 2 rows on side seats</span><span class="tile-count"></span></div>
+            <div class="hand-row"><div class="hand-main"></div></div>
+            <div class="meld-label">EXPOSED MELDS / 副露 · Row 3</div><div class="melds"></div>
+            <div class="drawn-label">DRAWN TILE / 摸到的牌 · Row 4</div><div class="drawn-slot"></div>
+          </div>
+
+          <div class="center">
+            <div class="discard-title">TABLE / 牌桌中央 · DISCARD RIVER / 牌河</div>
+            <div id="currentAction" class="current-action">Player 1 draws 3 Characters.<small>The drawn tile is shown at the far right of Player 1's hand.</small></div>
+            <div id="river" class="river"></div>
+            <div class="observer">👀 YOU ARE WATCHING · Fifth-person observer / 第五人观战</div>
+            <div class="direction-note">Fixed seat order for this teaching replay: P1 East → P2 South → P3 West → P4 North → P1. / 本教学牌局固定：玩家1东 → 玩家2南 → 玩家3西 → 玩家4北 → 玩家1。</div>
+          </div>
+
+          <div id="p2" class="player east side-player">
+            <div class="player-head"><div><span class="player-name">PLAYER 02</span> <span class="role">South / 南家</span></div><span class="seat">PLAYER 02 = SOUTH</span></div>
+            <div class="hand-meta"><span class="hand-label">Hand / 手牌 · 2 rows on side seats</span><span class="tile-count"></span></div>
+            <div class="hand-row"><div class="hand-main"></div></div>
+            <div class="meld-label">EXPOSED MELDS / 副露 · Row 3</div><div class="melds"></div>
+            <div class="drawn-label">DRAWN TILE / 摸到的牌 · Row 4</div><div class="drawn-slot"></div>
+          </div>
+
+          <div id="p1" class="player south">
+            <div class="player-head"><div><span class="player-name">PLAYER 01</span> <span class="role">East / 东家</span></div><span class="seat">PLAYER 01 = EAST</span></div>
+            <div class="hand-meta"><span class="hand-label">Hand / 手牌</span><span class="tile-count"></span></div>
+            <div class="hand-row"><div class="hand-main"></div><div class="drawn-slot"></div></div>
+            <div class="meld-label">EXPOSED MELDS / 副露</div><div class="melds"></div>
+          </div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-top">
+            <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+              <span id="stepBadge" class="stepbadge">EVENT 1 / 14</span>
+              <span id="phaseBadge" class="chip" style="background:#eef6ff;color:#264d73">DRAW PHASE / 摸牌阶段</span>
+            </div>
+            <span id="eventType" class="chip pass">PASS</span>
+          </div>
+          <div id="eventTitle" class="event-title"></div>
+          <div id="eventDesc" class="event-desc"></div>
+          <div id="reactionStrip" class="reaction-strip"></div>
+          <div id="priorityNote" class="priority-note" style="display:none"></div>
+
+          <div id="question" class="question">
+            <h3 id="questionText"></h3>
+            <div id="options" class="options"></div>
+            <div id="feedback" class="feedback"></div>
+          </div>
+
+
+        </div>
+
+        <div id="summary" class="summary">
+          <h2>Learning Summary / 学习总结</h2>
+          <p>This observation replay connected the foundation modules to a continuous Mahjong table.</p>
+          <div class="summary-lessons" id="reviewCards"></div>
+          <div class="term-card" style="text-align:left"><strong>Review prompt / 复习提示</strong><p>Which actions changed the turn order? Which choices depended on the table? Which tile completed the winning hand? / 哪些动作改变了轮转？哪些选择取决于牌桌？哪张牌完成了胡牌？</p></div>
+          <div class="toolbar" style="justify-content:center"><a id="reviewFoundation" class="btn" style="text-decoration:none" href="index.html">Review Foundation / 复习基础</a><button class="btn primary" id="watchAgain">Watch Again / 重新观看</button></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="side-card">
+      <div class="latest-card">
+        <h3>Latest Discard / 最近出牌</h3>
+        <div class="latest-big">
+          <div id="latestTile" class="tile">—</div>
+          <div class="latest-copy">
+            <strong id="latestEnglish">No discard yet</strong>
+            <span id="latestChinese">牌河会依次保留未被吃/碰/杠拿走的牌。</span><div id="priorClaim" style="margin-top:8px;font-size:12px;color:#526072"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glossary">
+        <h3>Quick English Support</h3>
+        <div id="glossaryRows"></div>
+      </div>
+
+      <div class="timeline">
+        <h3>14-Event Replay</h3>
+        <div id="timelineList" class="timeline-list"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+
+const T={
+  c1:['🀇','1 Character / 一万'],c2:['🀈','2 Characters / 二万'],c3:['🀉','3 Characters / 三万'],c4:['🀊','4 Characters / 四万'],c5:['🀋','5 Characters / 五万'],c6:['🀌','6 Characters / 六万'],c7:['🀍','7 Characters / 七万'],c8:['🀎','8 Characters / 八万'],c9:['🀏','9 Characters / 九万'],
+  b1:['🀐','1 Bamboo / 一条'],b2:['🀑','2 Bamboo / 二条'],b3:['🀒','3 Bamboo / 三条'],b4:['🀓','4 Bamboo / 四条'],b5:['🀔','5 Bamboo / 五条'],b6:['🀕','6 Bamboo / 六条'],b7:['🀖','7 Bamboo / 七条'],b8:['🀗','8 Bamboo / 八条'],b9:['🀘','9 Bamboo / 九条'],
+  d1:['🀙','1 Dot / 一筒'],d2:['🀚','2 Dots / 二筒'],d3:['🀛','3 Dots / 三筒'],d4:['🀜','4 Dots / 四筒'],d5:['🀝','5 Dots / 五筒'],d6:['🀞','6 Dots / 六筒'],d7:['🀟','7 Dots / 七筒'],d8:['🀠','8 Dots / 八筒'],d9:['🀡','9 Dots / 九筒'],
+  east:['🀀','East / 东'],south:['🀁','South / 南'],west:['🀂','West / 西'],north:['🀃','North / 北'],
+  red:['🀄','Red Dragon / 红中'],green:['🀅','Green Dragon / 发'],white:['🀆','White Dragon / 白']
+};
+
+const ACTION_LABELS={
+  PASS:'PASS / 过',
+  CHOW:'CHOW / 吃',
+  PUNG:'PUNG / 碰',
+  KONG:'KONG / 杠',
+  HU:'HU / 胡'
+};
+
+const initial={
+  p1:['red','red','c1','c2','c3','d2','b3','b4','b5','d6','d7','d8','d3'],
+  p2:['c2','c3','c4','c7','c8','b1','b4','b6','d2','d4','d6','east','white'],
+  p3:['c2','c3','c6','c7','b2','b5','b7','d5','d5','d5','d9','d9','green'],
+  p4:['c1','c4','c8','b3','b5','b6','b8','d1','d3','d4','d6','south','north']
+};
+
+const events=[
+{
+  actor:'p1', draw:'c3', discard:'c3', type:'PASS',
+  title:'Player 1 (East) draws 3 Characters, then discards it.',
+  desc:'Player 1 already holds 1–2–3 Characters and discards the duplicate 3 Characters. Player 1 discards the drawn tile; all three opponents pass.',
+  reactions:[['P2 · South','PASS','No claim'],['P3 · West','PASS','No Pung/Kong'],['P4 · North','PASS','No Pung/Kong']],
+  checkpoint:true,q:'What happened after Player 1 discarded 3 Characters?',opts:['Everyone passed / 全部过','Player 2 called Chow / 玩家2吃','Player 3 called Pung / 玩家3碰'],ans:0,
+  good:'Correct. Everyone passed. The 3 Characters stays in the discard river, and the next normal draw belongs to Player 2 (South).',
+  bad:'Look again: no exposed meld was created. The 3 Characters remains in the river.'
+ },
+{
+  actor:'p2', draw:'d1', discard:'east', type:'PASS',
+  title:'Player 2 (South) draws 1 Dot, then discards East. Everyone passes.',
+  desc:'Player 2 keeps the complete 2–3–4 Characters sequence intact. East is an isolated honor tile, so discarding East is the clearer beginner-level choice in this teaching hand.',
+  reactions:[['P3 · West','PASS','No Chow/Pung/Kong'],['P4 · North','PASS','No Pung/Kong'],['P1 · East','PASS','No Pung/Kong']],
+  checkpoint:true,q:'What did Player 2 do after drawing 1 Dot?',opts:['Discarded East and everyone passed / 打出东风，全部过','Broke the 2–3–4 Characters Chow','Declared Hu / 胡'],ans:0,
+  good:'Correct. Player 2 keeps the 2–3–4 Characters sequence and discards the isolated East tile. Nobody claims it, so East remains in the discard river.',
+  bad:'Look at Player 2’s hand: 2–3–4 Characters already form a useful sequence. The isolated East tile is the discard.'
+ },
+{
+  actor:'p3', draw:'b9', discard:'green', type:'PASS',
+  title:'Player 3 (West) draws 9 Bamboo, then discards Green Dragon. Everyone passes.',
+  desc:'Player 3 keeps 5–7–9 Bamboo because 7 Bamboo can still connect: drawing 6 Bamboo could support 5–6–7, while drawing 8 Bamboo could support 7–8–9. The isolated Green Dragon is the clearer discard.',
+  reactions:[['P4 · North','PASS','No claim'],['P1 · East','PASS','No Pung/Kong'],['P2 · South','PASS','No Pung/Kong']],
+  checkpoint:false
+ },
+{
+  actor:'p4', draw:'d9', discard:'d9', type:'PUNG', claimant:'p3',
+  title:'Player 4 (North) draws and discards 9 Dots. Player 3 (West) calls Pung.',
+  desc:'Player 1 has 7 Dots + 8 Dots and could use the discarded 9 Dots for a Chow if it were allowed to claim. Player 3 has a pair of 9 Dots and calls Pung, which has priority over Chow.',
+  reactions:[['P1 · East','CHOW available','7–8 + discarded 9'],['P2 · South','PASS','No Pung/Kong'],['P3 · West','PUNG','9–9 + discarded 9']],
+  claimMeld:{player:'p3',kind:'PUNG',tiles:['d9','d9','d9'],consume:['d9','d9']},
+  followDiscard:{player:'p3',tile:'b2'},
+  priority:'Priority example / 优先级示例: Pung (碰) takes priority over Chow (吃). Player 3 claims the 9 Dots.',
+  checkpoint:true,q:'A Chow is available, but Player 3 calls Pung. Who gets the 9 Dots?',opts:['The Chow caller','Player 3 for Pung / 玩家3碰','The tile stays in the river'],ans:1,
+  good:'Correct. Pung / 碰 has priority over Chow / 吃, so Player 3 claims the discarded 9 Dots.',
+  bad:'This checkpoint is about claim priority: Pung / 碰 outranks Chow / 吃.',
+  followQuestion:{
+    q:'After Player 3 calls Pung on 9 Dots, why must Player 3 discard one tile?',
+    opts:['Because claiming the discard brings the hand back above the normal post-turn hand size, so the player must discard / 因为碰牌后手牌重新超过正常出牌后的数量，需要再打一张','Because every Pung is followed by a mandatory second draw / 因为碰牌后必须再摸一张'],
+    ans:0,
+    good:'Correct. After calling Pung, the player has taken a discard into an exposed meld and must finish the turn by discarding one tile.',
+    bad:'Not quite. Pung does not require an extra normal draw first; the player claims the discard, exposes the meld, then discards one tile.'
+  }
+ },
+{
+  actor:'p3', draw:null, discard:null, type:'PASS',
+  title:'Response window: Player 3 has just discarded 2 Bamboo.',
+  desc:'Nobody claims Player 3’s 2 Bamboo. Player 4 is next in normal turn order and will draw next.',
+  reactions:[['P4 · North','PASS','No Chow/Pung/Kong/Hu'],['P1 · East','PASS','No Pung/Kong/Hu'],['P2 · South','PASS','No Pung/Kong/Hu']],
+  checkpoint:false,
+  autoNextTo:'p4'
+ },
+{
+  actor:'p4', draw:'d5', discard:'c1', type:'CHOW', claimant:'p1',
+  title:'Player 4 (North) draws 5 Dots, then discards 1 Character. Player 1 faces a strategy choice.',
+  desc:'Player 3 already holds three 5 Dots. Player 4 now draws the fourth 5 Dots. After that observer check, Player 4 discards 1 Character. Player 1 already has 1–2–3 Characters, so both PASS and CHOW are legal strategic choices.',
+  reactions:[['P1 · East','PASS available','Keep current structure'],['P1 · East','CHOW available','Use 2–3 + discarded 1'],['Observer','STRATEGY','Neither choice is automatically wrong']],
+  drawConcept:{
+    q:'Player 3 has three 5 Dots, and Player 4 just drew another 5 Dots. Can Player 1 or Player 2 later draw a fifth 5 Dots?',
+    opts:['No — each tile has only four copies / 不会，每种牌只有四张','Yes — a fifth copy can still appear / 会，还可能出现第五张'],
+    ans:0,
+    good:'Correct. Standard Mahjong uses four copies of each tile. Once all four 5 Dots are accounted for, no fifth 5 Dots can appear.',
+    bad:'Remember the physical tile set: each tile exists in four copies.'
+  },
+  strategyChoice:{
+    q:'Player 4 discards 1 Character. Player 1 already has 1–2–3 Characters. What can Player 1 legally choose?',
+    opts:['PASS / 过 — keep the current hand structure','CHOW / 吃 — take the 1 Character, then discard the duplicate 1 Character'],
+    explanation:'Both are legal. PASS keeps the current structure. CHOW can be used as an advanced table-reading tactic: Player 1 may expose 1–2–3, then discard the duplicate 1 Character to influence the next player’s response and potentially induce a useful discard. This is a strategic choice, not a right-or-wrong rule question.',
+    advanced:'Advanced tactic / 进阶技巧: if Player 1 has studied Player 2’s discard history and suspects Player 2 may release a tile Player 1 needs, feeding 1 Character can sometimes be used to influence the next action. Do not treat either choice as automatically wrong.'
+  },
+  claimMeld:{player:'p1',kind:'CHOW',tiles:['c1','c2','c3'],consume:['c2','c3']},
+  followDiscard:{player:'p1',tile:'c1'}
+ },
+{
+  actor:'p1', draw:null, discard:null, type:'CHOW', claimant:'p2',
+  title:'Player 2 (South) Chows Player 1’s discarded 1 Character, then discards 4 Characters.',
+  desc:'Player 2 is next after Player 1. Player 2 uses 2 + 3 Characters with the discarded 1 Character to expose 1–2–3 Characters, then discards the remaining 4 Characters.',
+  reactions:[['P2 · South','CHOW','1–2–3 Characters'],['P3 · West','PASS','No higher-priority claim'],['P4 · North','PASS','No higher-priority claim']],
+  externalClaim:{discardTile:'c1',discarder:'p1',player:'p2',kind:'CHOW',tiles:['c1','c2','c3'],consume:['c2','c3'],followDiscard:'c4'},
+  checkpoint:false
+ },
+{
+  actor:'p2', draw:null, discard:null, type:'CHOW', claimant:'p3',
+  title:'Player 3 (West) Chows Player 2’s discarded 4 Characters, then discards 9 Bamboo.',
+  desc:'Player 3 has 2 + 3 Characters, so Player 2’s 4 Characters completes 2–3–4 Characters. Player 3 exposes the Chow and then discards 9 Bamboo.',
+  reactions:[['P3 · West','CHOW','2–3–4 Characters'],['P4 · North','PASS','No higher-priority claim'],['P1 · East','PASS','No higher-priority claim']],
+  externalClaim:{discardTile:'c4',discarder:'p2',player:'p3',kind:'CHOW',tiles:['c2','c3','c4'],consume:['c2','c3'],followDiscard:'b9'},
+  checkpoint:false
+ },
+{
+  actor:'p4', draw:'red', discard:'red', type:'PASS',
+  title:'Player 4 (North) passes on 9 Bamboo, then draws Red Dragon and discards it.',
+  desc:'Player 4 does not claim Player 3’s 9 Bamboo. Normal play continues: Player 4 draws Red Dragon and discards it.',
+  reactions:[['P4 · North','PASS then DRAW','Passes 9 Bamboo, then draws'],['P1 · East','Decision coming','Pair of Red Dragons'],['P2 · South','—','Waiting for response']],
+  checkpoint:false
+ },
+{
+  actor:'p1', draw:null, discard:null, type:'PASS',
+  title:'Strategy decision: Pung the Red Dragon or Pass?',
+  desc:'Player 1 has two Red Dragons, so Pung is legal. PASS is also legal. The better decision depends on which winning tiles are still live on the table.',
+  reactions:[['P1 · East','PASS','Keep 1 Dot / 4 Dot wait'],['P1 · East','PUNG','Change structure; then discard 2 Dot or 3 Dot'],['Observer','COMPARE','Use visible tile information']],
+  tenpaiDecision:true,
+  strategyChoice:{
+    q:'Both PUNG and PASS are legal. Which route would you like to compare?',
+    opts:['PASS / 过 — keep the current 1 Dot / 4 Dot tenpai','PUNG / 碰 — expose three Red Dragons and restructure the hand'],
+    explanation:'Neither route is automatically wrong. PASS preserves the broader two-tile wait. PUNG changes the structure and forces Player 1 to discard either 2 Dot or 3 Dot, narrowing the immediate wait to one tile.',
+    special:'Special case / 特例: if all four 1 Dots are already visible in another player’s Kong and all four 4 Dots are already visible in the discard history, the current 1 Dot / 4 Dot wait is dead. In that situation, PUNG becomes the practical route because the old winning tiles can no longer appear.'
+  },
+  checkpoint:false
+ },
+{
+  actor:'p1', draw:'d3', discard:'d3', type:'CHOW',
+  title:'Player 1 passes the Red Dragon, draws 3 Dots, then discards 3 Dots. Player 2 chooses how to Chow.',
+  desc:'Player 2 can use either 1–2 Dots + the discarded 3 Dot, or 2–4 Dots + the discarded 3 Dot. The observer compares which Chow preserves more future flexibility.',
+  reactions:[['P2 · South','CHOW option A','1–2–3 Dots'],['P2 · South','CHOW option B','2–3–4 Dots'],['Observer','COMPARE','Which leaves a better shape?']],
+  chowChoice:{
+    q:'Which Chow is strategically more flexible for Player 2?',
+    opts:['Use 1 Dot + 2 Dot + discarded 3 Dot / 用1筒2筒吃3筒','Use 2 Dot + 4 Dot + discarded 3 Dot / 用2筒4筒吃3筒'],
+    ans:0,
+    good:'Good choice. Using 1–2–3 Dots keeps 4 Dot and 6 Dot available as a 4–6 shape that can still improve with 5 Dot. In the real game, Player 2 cannot see Player 3’s concealed three 5 Dots; this full-information view is for the observer only.',
+    bad:'Both Chow patterns are legal, but 1–2–3 Dots leaves 4 Dot + 6 Dot together, which can still improve with 5 Dot.'
+  },
+  chosenClaim:{player:'p2',kind:'CHOW',tiles:['d1','d2','d3'],consume:['d1','d2'],followDiscard:'white'}
+ },
+{
+  actor:'p2', draw:null, discard:null, type:'PASS',
+  title:'Player 2 discards White Dragon. Everyone passes.',
+  desc:'No player claims the White Dragon, so normal play continues to Player 3 (West).',
+  reactions:[['P3 · West','PASS','No claim'],['P4 · North','PASS','No claim'],['P1 · East','PASS','No claim']],
+  checkpoint:false,
+  postChosenDiscard:true,
+  nextActor:'p3'
+ },
+{
+  actor:'p3', draw:'d9', discard:'c6', type:'KONG',
+  title:'Player 3 draws 9 Dots and upgrades the exposed Pung to a Kong.',
+  desc:'Player 3 already has an exposed Pung of 9 Dots. Drawing the fourth 9 Dot allows an added Kong. After declaring Kong, Player 3 receives a replacement draw, here 6 Bamboo, then discards 6 Characters.',
+  reactions:[['P3 · West','ADDED KONG','Pung of 9 Dots + drawn 9 Dot'],['Replacement draw','6 Bamboo','Compensates for the fourth tile in the Kong'],['P3 discard','6 Characters','Turn continues']],
+  kongTeach:true,
+  upgradeKong:{player:'p3',tile:'d9',replacement:'b6',followDiscard:'c6'},
+  checkpoint:false
+ },
+{
+  actor:'p4', draw:'b7', discard:'d1', type:'HU',
+  title:'Player 4 draws 7 Bamboo, then discards 1 Dot. Player 1 declares Hu.',
+  desc:'Player 1 has 2 Dot + 3 Dot and is waiting on 1 Dot or 4 Dot. Player 4’s discarded 1 Dot completes 1–2–3 Dots, so Player 1 wins on the discard.',
+  reactions:[['P4 · North','DISCARD','1 Dot / 一筒'],['P1 · East','HU / 胡','1–2–3 Dots completes'],['Observer','ROUND COMPLETE','The learning replay ends']],
+  winningClaim:{player:'p1',tile:'d1'},
+  checkpoint:true,
+  q:'Why can Player 1 declare Hu on Player 4’s 1 Dot?',
+  opts:['1 Dot completes Player 1’s 1–2–3 Dots sequence / 一筒完成123筒','Because any 1 Dot is automatically a winning tile','Because Player 1 has two Red Dragons'],
+  ans:0,
+  good:'Correct. Player 1’s 2 Dot + 3 Dot wait accepts 1 Dot or 4 Dot. Player 4 discarded 1 Dot, completing the winning sequence.',
+  bad:'Look at Player 1’s 2 Dot + 3 Dot shape: 1 Dot completes 1–2–3 Dots.'
+ }
+];
+
+function renderRiver(){
+  const river=document.getElementById('river');river.innerHTML='';
+  state.river.forEach((entry,i)=>{
+    const wrap=document.createElement('div');
+    const isLatest = state.latest && entry.id===state.latest.id;
+    wrap.className='river-entry '+(isLatest?'latest ':'')+(entry.claimedBy?'claimed':'');
+    wrap.appendChild(tileEl(entry.tile));
+    const by=document.createElement('span');
+    by.className='river-by';
+    by.textContent=entry.by.toUpperCase();
+    by.title=`Discarded by ${playerLabel(entry.by)}`;
+    wrap.appendChild(by);
+    if(entry.claimedBy){
+      const note=document.createElement('span');
+      note.className='claim-note';
+      note.textContent=`claimed by ${entry.claimedBy.toUpperCase()}`;
+      note.title=`Claimed by ${playerLabel(entry.claimedBy)}`;
+      wrap.appendChild(note);
+    }
+    river.appendChild(wrap);
+  });
+  if(!state.river.length) river.innerHTML='<span style="grid-column:1/-1;color:#dce9e3;font-size:12px;padding:20px 0">No discards yet / 暂无弃牌</span>';
+}
+function playerLabel(pid){
+  return {p1:'Player 1 · East / 玩家1·东',p2:'Player 2 · South / 玩家2·南',p3:'Player 3 · West / 玩家3·西',p4:'Player 4 · North / 玩家4·北'}[pid]||pid;
+}
+function renderLatest(){
+  const box=document.getElementById('latestTile'), en=document.getElementById('latestEnglish'), zh=document.getElementById('latestChinese');
+  if(!state.latest){box.textContent='—';en.textContent='No discard yet';zh.textContent='牌河会依次保留出牌历史，包括后来被吃/碰/杠拿走的牌。';return}
+  box.textContent=T[state.latest.tile][0];
+  const parts=T[state.latest.tile][1].split(' / ');
+  const claimed = state.latest.claimedBy ? ` · claimed by ${playerLabel(state.latest.claimedBy).split(' / ')[0]}` : '';
+  const claimedZh = state.latest.claimedBy ? ` · 后被 ${playerLabel(state.latest.claimedBy).split(' / ')[1]||playerLabel(state.latest.claimedBy)} 拿走` : '';
+  en.textContent=`${parts[0]} · discarded by ${playerLabel(state.latest.by).split(' / ')[0]}${claimed}`;
+  zh.textContent=`${parts[1]||''} · 由 ${playerLabel(state.latest.by).split(' / ')[1]||playerLabel(state.latest.by)} 打出${claimedZh}`; const prior=state.river.slice(0,-1).reverse().find(x=>x.claimedBy); const log=document.getElementById('priorClaim'); if(log) log.textContent=prior ? `Previous claim / 上一次鸣牌: ${T[prior.tile][1]} · ${playerLabel(prior.by)} → ${playerLabel(prior.claimedBy)}` : '';
+}
+function renderGlossary(){
+  const codes=[...new Set(state.river.slice(-5).map(x=>x.tile))].reverse();
+  const wrap=document.getElementById('glossaryRows');wrap.innerHTML='';
+  if(!codes.length){wrap.innerHTML='<div style="color:#667085;font-size:12px">Recent discarded tiles will appear here with English names.</div>';return}
+  codes.forEach(c=>{
+    const row=document.createElement('div');row.className='grow';
+    row.appendChild(tileEl(c));
+    const t=document.createElement('div');const [en,zh]=T[c][1].split(' / ');
+    t.innerHTML=`<strong>${en}</strong><br><small>${zh||''}</small>`;row.appendChild(t);wrap.appendChild(row);
+  });
+}
+
+const $=id=>document.getElementById(id), clone=x=>JSON.parse(JSON.stringify(x));
+const ids=['p1','p2','p3','p4'];
+let state,idx=0,pos=0,steps=[],snapshots=[],timer=null,choiceSeen=false,won=false;
+function tileEl(c,cls=''){let d=document.createElement('div');d.className='tile '+cls;d.textContent=T[c][0];d.title=T[c][1];return d}
+function removeOne(a,c){let i=a.indexOf(c);if(i<0)throw Error('Missing tile '+c);a.splice(i,1)}
+const tileOrder=Object.keys(T);
+function sortedHand(a){return [...a].sort((x,y)=>tileOrder.indexOf(x)-tileOrder.indexOf(y))}
+function discard(p,c){if(state.drawn[p]){state.hands[p].push(state.drawn[p]);state.drawn[p]=null}removeOne(state.hands[p],c);let x={id:state.river.length+1,tile:c,by:p,claimedBy:null};state.river.push(x);state.latest=x}
+function claim(p,k,tiles,consume){let x=state.latest;if(!x||x.claimedBy)throw Error('No available discard');consume.forEach(c=>removeOne(state.hands[p],c));x.claimedBy=p;state.melds[p].push({kind:k,tiles:[...tiles]})}
+function draw(p,c){if(state.drawn[p])throw Error('Already drawn');state.drawn[p]=c}
+function demo(title,tiles,note=''){return `<div class="demo-box"><h4>${title}</h4><div class="tile-demo">${tiles.map(c=>T[c]?`<span class="tile" title="${T[c][1]}">${T[c][0]}</span>`:`<strong>${c}</strong>`).join('')}</div><div>${note}</div></div>`}
+function row(...x){return `<div class="compare-grid">${x.join('')}</div>`}
+function step(label,action,actor,phase='ACTION / 操作'){steps.push({label,action,actor,phase})}
+function check(data,actor,visual='',comparison=null,seconds=15){steps.push({label:'Observer Check / 观察者检查',actor,phase:'RESPONSE / 响应阶段',data,visual,comparison,seconds})}
+function dstep(p,c){step('Show Draw / 显示摸牌',()=>draw(p,c),p,'DRAW / 摸牌')}
+function outstep(p,c){step('Resolve Event / 打出 '+T[c][1],()=>discard(p,c),p,'DISCARD / 出牌')}
+function cstep(p,k,tiles,consume){step('Resolve Event / '+ACTION_LABELS[k],()=>claim(p,k,tiles,consume),p,'RESPONSE / 响应阶段')}
+function redStrategy(i){
+ const selected=i===0?'PASS keeps the two-sided wait. / 过牌保留两面听。':'PUNG changes the hand to a single-tile pair wait. / 碰牌后改为单钓。';
+ return selected+`<div class="term-card"><strong>听牌 · tīng pái · ready hand (tenpai)</strong><br>One tile away from completing a winning hand. / 只差一张牌即可胡牌。</div>`+
+ row(demo('PASS / 过：两面听',['d2','d3','→','d1','or','d4'],'Keep the Red Dragon pair. Either 1 Dot or 4 Dots completes a sequence. Up to 8 physical winning copies (4 + 4), before accounting for unavailable tiles. 保留红中对子，最多有8张潜在胡牌张。'),demo('PUNG / 碰：单钓',['red','red','red'],'Expose the Red Dragon triplet, then discard one tile. / 碰红中后必须打一张。')+demo('Discard 2 Dots / 打二筒',['d2','→','d3','d3'],'Keep 3 Dots as a single tile; wait for another 3 Dots to form a pair. At most 3 remaining copies. / 单钓三筒，最多剩3张。')+demo('Discard 3 Dots / 打三筒',['d3','→','d2','d2'],'Wait for another 2 Dots to form a pair. At most 3 remaining copies. / 单钓二筒，最多剩3张。'))+
+ `<div class="term-card"><strong>Why availability matters / 为什么要看剩余牌？</strong><br>8 versus 3 is an upper bound on tile copies, not an exact winning probability. Subtract unavailable copies; the wall, other hands and future discards determine actual chances. / 8与3是理论上限，并非实际胡牌概率。</div>`+
+ row(demo('Hypothetical P3 Kong / 假设P3杠一筒',['d1','d1','d1','d1'],'All four 1 Dots unavailable / 一筒已全部用尽'),demo('Hypothetical discard river / 假设牌河',['d4','d4','d4','d4'],'All four 4 Dots already discarded / 四筒已全部打出'))+
+ `<p><strong>Special case / 特例：</strong> If both waits are exhausted, PASS cannot win on the existing wait. PUNG may restore a live wait if 2 or 3 Dots remain available. Neither decision is universally best. This example is hypothetical; the actual replay follows PASS. / 原听牌无有效牌时，可考虑碰红中改变牌型，但仍须检查二筒或三筒是否可用。本例是假设，实际回放选择过。</p>`;
+}
+function kongValue(i){return i===0 ? `<div class="term-card"><strong>Discard / 直接出牌</strong><br>Keep the existing Pung and avoid declaring a new Kong. This may be preferable depending on the table and rules. / 保留原碰牌，是否更有利取决于牌桌与规则。</div>` : `<div class="kong-value"><h3>Why choose Kong? / 为什么选择加杠？</h3>${demo('01 · Added Kong / 加杠',['d9','d9','d9','+','d9','→','d9','d9','d9','d9'],'Upgrade the existing Pung; then take a replacement draw. / 升级碰牌，再补摸。')}<div class="demo-box"><h4>02 · Possible scoring benefit / 可能提高得分</h4><div class="value-flow"><span>40 pts</span><b>×2 →</b><span>80 pts</span></div><p>Illustrative example only: in a rule set that doubles the hand value for a Kong, 40 points become 80. Other rules award separate points or use different scoring. / 仅为教学示例：若某规则规定杠使牌值翻倍，40分可变为80分；其他规则可能单独计分。</p></div><div class="demo-box"><h4>03 · Winning on a replacement draw / 杠上开花</h4><div class="value-flow"><span>Ready hand<br>听牌</span><b>→</b><span>Kong<br>杠</span><b>→</b><span>Winning draw<br>补摸即胡</span></div><div class="value-flow"><span>40 pts</span><b>×10 →</b><span>400 pts</span></div><p>Hypothetical multiplier, not a standard rule. Some variants reward a win on the replacement tile. The bonus depends on the rules. P3 does not win on the replacement draw in this replay. / 假设十倍奖励，并非通用规则。本局P3补摸六条后并未胡牌。</p></div><div class="term-card"><strong>Rule differences / 规则差异</strong><br>A Kong is not always better; an added Kong may also be robbed in some variants. No scoring or betting is simulated here. / 杠不一定更好；部分规则允许抢杠胡。本回放不模拟计分或下注。</div></div>`}
+function buildReview(){
+ const cards=[
+ ['01','Turn order and basic cycle / 轮转与基本流程','Event 1–3',demo('P1 → P2',['c3','→','PASS','→','d1'],'P1 discards 3 Characters; everyone passes. P2 draws next. / P1打三万，三家过，P2摸牌。'),'Draw → discard → response → next draw. Only the next player may Chow; other players can make eligible higher-priority claims. / 摸牌、出牌、响应、下一家摸牌。'],
+ ['02','Chow, Pung and priority / 吃碰及优先级','Event 4, 6–8',row(demo('Chow / 吃',['c1','c2','c3'],'Three consecutive tiles in one suit. / 同花色连续三张。'),demo('Pung / 碰',['d9','d9','d9'],'Three identical tiles. / 三张相同牌。')),'Pung can override Chow; Hu generally has priority over meld claims. In Event 4 P3 claims P4’s 9 Dots. / 碰可优先于吃，胡通常优先于鸣牌。本局P3碰P4的九筒。'],
+ ['03','Strategy and available tiles / 策略与有效牌','Event 6, 10–11',row(demo('Chow then discard / 吃后出牌',['c1','c2','c3','→','c1'],'A legal tactic, not a guaranteed advantage. / 合法技巧，并非保证有利。'),demo('Two-sided wait / 两面听',['d2','d3','→','d1','or','d4'],'Up to eight copies before accounting for unavailable tiles. / 理论最多八张，需扣除不可用牌。')),'Compare legal choices using visible tiles. Each tile type has four copies; a wider wait is not a guaranteed win. / 结合可见牌比较合法选择；每种普通牌四张，等待范围更广不代表必胡。'],
+ ['04','Kong and replacement draw / 杠与补摸','Event 13',demo('Added Kong → replacement / 加杠后补摸',['d9','d9','d9','+','d9','→','b6'],'P3 upgrades the Pung, draws 6 Bamboo, then discards 6 Characters. / P3加杠九筒，补摸六条，再打六万。'),'A Kong contains four physical tiles but counts as one meld. A replacement draw restores the hand structure. Scoring bonuses vary by rules. / 杠有四张实体牌但算一个组合，需要补摸；计分奖励因规则而异。'],
+ ['05','Tenpai and Hu / 听牌与胡牌','Event 10, 14',row(demo('Ready hand / 听牌',['d2','d3','→','d1','or','d4'],'Either tile completes the sequence. / 一筒或四筒完成顺子。'),demo('Winning sequence / 胡牌组合',['d1','d2','d3'],'P4 discards 1 Dot; P1 wins. / P4打一筒，P1胡牌。')),'Tenpai (tīng pái) means one tile away from a winning hand. Recognize the final tile and how it completes the hand. / 听牌表示只差一张即可完成胡牌结构。']];
+ $('reviewCards').innerHTML=cards.map(([n,title,event,visual,copy])=>`<article class="review-card"><header><span class="review-num">${n}</span><div><h3>${title}</h3><small>${event}</small></div></header>${visual}<p>${copy}</p></article>`).join('');
+}
+function makeSteps(){steps=[];let e=events[idx];
+ if(e.draw)dstep(e.actor,e.draw);
+ if(e.drawConcept)check(e.drawConcept,'p4',row(demo('P3 — three copies',['d5','d5','d5']),demo('P4 — fourth copy',['d5'])),null,10);
+ if(e.kongTeach){let u=e.upgradeKong;check({q:'Discard the fourth 9 Dot or upgrade the Pung?',opts:['Discard 9 Dot / 打九筒','Added Kong / 加杠']},'p3',row(demo('Existing Pung',['d9','d9','d9']),demo('New draw',['d9'])),i=> (i===0?'Discarding is legal; the Pung remains. / 打出合法，无需补摸。':'Adding a Kong is legal; a replacement tile is required. / 加杠合法，需要补摸。')+row(demo('Concealed Kong / 暗杠',['d9','d9','d9','d9'],'Four concealed copies'),demo('Added Kong / 加杠',['d9','d9','d9','+','d9'],'One meld slot, four physical tiles.'))+kongValue(i)+'Replay follows the added Kong route. / 回放演示加杠。',20);step('Resolve Event / 执行加杠',()=>{let m=state.melds.p3.find(m=>m.kind==='PUNG'&&m.tiles[0]==='d9');if(!m)throw Error('Missing Pung');m.kind='KONG';m.tiles.push('d9');state.drawn.p3=null},'p3','KONG / 杠');step('Show Draw / 杠后补摸六条',()=>draw('p3','b6'),'p3','REPLACEMENT DRAW / 补摸');outstep('p3','c6');return}
+ if(e.discard)outstep(e.actor,e.discard);
+ if(e.externalClaim){let x=e.externalClaim;cstep(x.player,x.kind,x.tiles,x.consume);outstep(x.player,x.followDiscard);return}
+ if(e.strategyChoice){let ten=e.tenpaiDecision;check(e.strategyChoice,'p1',ten?row(demo('Current hand',['red','red','d2','d3']),demo('Latest discard',['red'])):row(demo('Current shape',['c1','c2','c3']),demo('P4 discard',['c1'])),i=>ten?redStrategy(i):(i===0?'PASS keeps the concealed sequence.':'CHOW can influence the next discard, but is not guaranteed.')+demo('Advanced tactic / 进阶技巧',['c1','c2','c3','+','c1','→','c1'],'Expose 123 Characters and discard the original duplicate 1 Character. Replay follows CHOW. 两种选择均合法。'),ten?20:15);if(ten){step('Resolve Event / P1 PASS 红中',()=>{},'p1');return}}
+ if(e.chowChoice){check(e.chowChoice,'p2',row(demo('Option A / 选择 A',['d1','d2','d3']),demo('Option B / 选择 B',['d2','d3','d4'])),i=>(i===0?'A retains 4 and 6 Dots, which can connect with 5 Dots. / 保留四六筒。':'B is legal; it leaves 1 and 6 Dots, which are less connected. / 合法，但剩下一六筒较难连接。')+row(demo('A remaining shape',['d4','d6','+','d5'],'Possible future 5 Dots'),demo('B remaining shape',['d1','d6'],'Less connected'))+'Real players cannot see concealed hands. Replay follows A. / 实战看不到他家暗牌，本回放采用A。',15);let x=e.chosenClaim;cstep(x.player,x.kind,x.tiles,x.consume);return}
+ if(e.postChosenDiscard){outstep('p2','white');step('Resolve Event / 全部过',()=>{},'p3');return}
+ if(e.winningClaim){check({q:'Can Player 1 declare Hu? / 玩家1可以胡牌吗？',opts:['Yes / 可以胡','No / 不可以胡'],ans:0,good:'Correct: 1 Dot completes 1–2–3 Dots.',bad:'Look at the 2–3 Dots wait.'},'p1',demo('Winning tile? / 胡牌张',['d1']));step('Resolve Event / P1 HU 胡牌',()=>{state.latest.claimedBy='p1';state.drawn.p1='d1';won=true},'p1','HU / 胡');return}
+ if(e.claimMeld){let x=e.claimMeld;cstep(x.player,x.kind,x.tiles,x.consume)}
+ if(e.checkpoint)check(e,e.claimant||null);
+ if(e.followQuestion)check(e.followQuestion,e.claimant);
+ if(e.followDiscard)outstep(e.claimMeld.player,e.followDiscard.tile);
+ if(!steps.length||e.autoNextTo)step('Resolve Event / 确认响应',()=>{},e.autoNextTo||e.actor,'PASS / 过');
+}
+function renderPlayer(p){let el=$(p),s=steps[pos];el.classList.toggle('active',s?.actor===p);el.classList.toggle('think',!!s?.data&&s.actor===p);el.classList.toggle('winner',won&&p==='p1');el.querySelectorAll('.thinking,.hu-badge,.fireworks,.hu-fireworks').forEach(x=>x.remove());let a=el.querySelector('.hand-main'),b=el.querySelector('.drawn-slot'),m=el.querySelector('.melds');a.replaceChildren(...sortedHand(state.hands[p]).map(c=>tileEl(c)));b.replaceChildren(...(state.drawn[p]?[tileEl(state.drawn[p],'drawn')]:[]));m.innerHTML='';for(let x of state.melds[p]){let g=document.createElement('div');g.className='meld-group';g.innerHTML=`<span class="meld-name">${ACTION_LABELS[x.kind]}</span>`;g.append(...x.tiles.map(c=>tileEl(c,'claimed')));m.append(g)}el.querySelector('.tile-count').textContent=(state.hands[p].length+state.melds[p].length*3+(state.drawn[p]?1:0))+'-tile structure';if(s?.data&&s.actor===p){let t=document.createElement('div');t.className='thinking';t.innerHTML='<b>?</b> Thinking / 思考中';el.append(t)}if(won&&p==='p1'){let t=document.createElement('span');t.className='hu-badge';t.textContent='HU / 胡';el.querySelector('.player-head>div').append(t);let f=document.createElement('div');f.className='hu-fireworks';f.setAttribute('aria-hidden','true');f.innerHTML='<span>✦</span><span>✺</span><span>✦</span><span>✹</span><span>✦</span><span>✺</span><span>✦</span><span>✹</span>';el.append(f)}}
+function clearTimer(){clearInterval(timer);timer=null}
+function paint(){clearTimer();choiceSeen=false;let e=events[idx],s=steps[pos];ids.forEach(renderPlayer);renderRiver();renderLatest();renderGlossary();$('timelineList').innerHTML=events.map((x,i)=>`<div class="titem ${i===idx?'current':''} ${i<idx?'done':''}"><div class="tnum">${i+1}</div><div>${x.title}</div><span class="chip">${ACTION_LABELS[x.type]}</span></div>`).join('');$('statusTitle').textContent=`Event ${idx+1} of ${events.length}`;$('stepBadge').textContent=`EVENT ${idx+1} / ${events.length}`;$('progressFill').style.width=`${(idx+(s?pos/steps.length:1))/events.length*100}%`;$('phaseBadge').textContent=s?.phase||'RESULT / 结果';$('eventType').textContent=ACTION_LABELS[e.type];$('eventTitle').textContent=e.title;$('eventDesc').textContent=e.desc;$('reactionStrip').innerHTML='';$('priorityNote').style.display='none';$('question').classList.remove('show');let p=$('observerPanel');p.hidden=!s?.data;p.innerHTML='';$('playBtn').disabled=!s||!!s.data;$('playBtn').textContent=s?.label||'Event Complete / 本事件完成';$('playBtn').className='btn '+(s?.label.startsWith('Show Draw')?'draw-phase':'resolve-phase');$('nextBtn').disabled=!!s||idx===events.length-1;$('prevBtn').disabled=idx===0;$('statusText').textContent=s?.data?'Compare or answer, then continue manually. / 观察后手动继续。':s?'Click the action button to proceed. / 点击按钮执行。':'Event complete. Click Next Event. / 点击下一事件。';let a=$('currentAction');a.textContent=won?'Player 1 declares HU / 玩家1胡牌！':s?.actor?playerLabel(s.actor)+' — '+s.label:s?'Observer Check / 观察者检查':'Event complete / 本事件完成';if(state.latest){let x=state.latest;a.innerHTML+=`<small>Latest: ${T[x.tile][1]} · ${playerLabel(x.by)}${x.claimedBy?' → claimed by '+playerLabel(x.claimedBy):''}</small>`}if(s?.data)showCheck(s);if(won){$('summary').classList.add('show')}else $('summary').classList.remove('show');}
+function showCheck(s){let d=s.data,p=$('observerPanel');p.innerHTML=`<div>Observer Check / 观察者检查</div><h3>${d.q}</h3>${s.visual}<div class="options" id="checkOptions"></div><div id="checkFeedback" class="feedback"></div><div id="readTimer" style="margin:10px 0;color:#725e19"></div><button class="btn primary" id="continueCheck" disabled>Continue / 继续 →</button>`;d.opts.forEach((v,i)=>{let b=document.createElement('button');b.className='option';b.textContent=v;b.onclick=()=>{clearTimer();let f=$('checkFeedback');p.querySelectorAll('.option').forEach(x=>x.classList.remove('selected','correct','wrong'));b.classList.add('selected');let ok=!!s.comparison||i===d.ans;f.className='feedback show '+(ok?'good':'bad');f.innerHTML=s.comparison?s.comparison(i):ok?d.good:d.bad;$('continueCheck').disabled=!ok;if(!ok){$('readTimer').textContent='Try again / 再试一次';return}let left=s.seconds;$('readTimer').textContent=`Suggested reading: ${left}s / 建议阅读 ${left} 秒（不会自动出牌）`;timer=setInterval(()=>{left--;if(left<=0){clearTimer();$('readTimer').textContent='Ready — click Continue / 阅读完毕，点击继续'}else $('readTimer').textContent=`Suggested reading: ${left}s / 建议阅读 ${left} 秒`},1000)};$('checkOptions').append(b)});$('continueCheck').onclick=()=>{pos++;paint()}}
+function enter(i){idx=i;pos=0;makeSteps();snapshots[i]=clone(state);paint()}
+function reset(){clearTimer();state={hands:clone(initial),melds:{p1:[],p2:[],p3:[],p4:[]},river:[],latest:null,drawn:{p1:null,p2:null,p3:null,p4:null}};won=false;snapshots=[];enter(0)}
+$('question').insertAdjacentHTML('afterend','<div id="observerPanel" class="observer-panel" hidden></div>');$('playBtn').onclick=()=>{let s=steps[pos];if(!s||s.data)return;s.action();pos++;paint();};$('nextBtn').onclick=()=>{if(pos===steps.length&&idx<events.length-1)enter(idx+1)};$('prevBtn').onclick=()=>{if(idx>0){let i=idx-1;state=clone(snapshots[i]);state.latest=state.river.at(-1)||null;won=false;enter(i)}};$('resetBtn').onclick=reset;$('heroToggle').onclick=()=>{let b=$('hero').classList.toggle('collapsed');$('heroToggle').textContent=b?'+':'−'};buildReview();reset();
+
+</script><script>
+(()=>{const localFile=location.protocol==='file:';let unlocked=false;try{unlocked=localStorage.getItem('mahjongFoundationCompleteV080')==='true'}catch(e){}if(location.hash==='#foundation-complete')unlocked=true;
+if(!unlocked){document.querySelector('.app').hidden=true;const gate=document.createElement('section');gate.className='hero';gate.style.cssText='max-width:760px;margin:40px auto';gate.innerHTML='<h1>🔒 Watch the Game</h1><p>Complete all four foundation modules first. / 请先完成四个基础模块。</p><a class="btn primary" href="index.html">Return to Foundation / 返回基础学习</a>';document.body.append(gate);return;}
+const back='index.html#foundation-complete';document.getElementById('foundationBack').href=back;document.getElementById('reviewFoundation').href=back;document.getElementById('watchAgain').onclick=()=>{reset();window.scrollTo({top:0,behavior:'smooth'})};})();
+</script></body></html>
